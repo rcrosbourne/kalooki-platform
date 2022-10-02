@@ -9,6 +9,9 @@ export default function Dashboard(props) {
             .listen('UserLoggedIn', (e) => {
                 setUserLoggedIn(e);
             });
+        return () => {
+            window.Echo.leaveChannel(`user-logged-in`);
+        }
     }, []);
     return (
         <AuthenticatedLayout
@@ -23,7 +26,7 @@ export default function Dashboard(props) {
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 bg-white border-b border-gray-200">{props.auth.user.name} You're logged in!</div>
 
-                        { userLoggedIn && <div className="p-6 bg-white border-b border-gray-200">{userLoggedIn.user.name} Just logged In</div> }
+                        {userLoggedIn && <div className="p-6 bg-white border-b border-gray-200">{userLoggedIn.user.name} Just logged In</div>}
                     </div>
                 </div>
             </div>
