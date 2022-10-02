@@ -24,10 +24,9 @@ export default function Login({ status, canResetPassword }) {
         setData(event.target.name, event.target.type === 'checkbox' ? event.target.checked : event.target.value);
     };
 
-    const submit = (e) => {
+    const submit = async (e) => {
         e.preventDefault();
-
-        post(route('login'));
+        post(route('login'), {headers: {'X-Socket-Id': await window.Echo.socketId()}});
     };
 
     return (
