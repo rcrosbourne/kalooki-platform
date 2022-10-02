@@ -235,9 +235,9 @@ web_extra_daemons:
 - name: "websocket-daemon"
   command: "php artisan websocket:serve"
   directory: /var/www/html
-#- name: "http-2"
-#  command: "/var/www/html/node_modules/.bin/http-server /var/www/html/sub -p 3000"
-#  directory: /var/www/html
+- name: "queue-daemon"
+  command: "php artisan queue:work"
+  directory: /var/www/html
 
 # override_config: false
 # By default, config.*.yaml files are *merged* into the configuration
