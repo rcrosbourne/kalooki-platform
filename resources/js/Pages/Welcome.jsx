@@ -25,48 +25,48 @@ const data = [
         suit: '♦️',
         color: 'red',
     },
-    {
-        value: 10,
-        suit: '♣️',
-        color: 'black',
-    },
-    {
-        value: 10,
-        suit: '♠',
-        color: 'black',
-    },
-    {
-        value: 10,
-        suit: '♥️',
-        color: 'red',
-    },
-    {
-        value: 10,
-        suit: '♦️',
-        color: 'red',
-    },
-    {
-        value: 6,
-        suit: '♠',
-        color: 'black',
-    },
-    {
-        value: 6,
-        suit: '♣️',
-        color: 'black',
-    },
-    {
-        value: 6,
-        suit: '♥️',
-        color: 'red',
-    },
-    {
-        value: 6,
-        suit: '♦️',
-        color: 'red',
-    },
+    // {
+    //     value: 10,
+    //     suit: '♣️',
+    //     color: 'black',
+    // },
+    // {
+    //     value: 10,
+    //     suit: '♠',
+    //     color: 'black',
+    // },
+    // {
+    //     value: 10,
+    //     suit: '♥️',
+    //     color: 'red',
+    // },
+    // {
+    //     value: 10,
+    //     suit: '♦️',
+    //     color: 'red',
+    // },
+    // {
+    //     value: 6,
+    //     suit: '♠',
+    //     color: 'black',
+    // },
+    // {
+    //     value: 6,
+    //     suit: '♣️',
+    //     color: 'black',
+    // },
+    // {
+    //     value: 6,
+    //     suit: '♥️',
+    //     color: 'red',
+    // },
+    // {
+    //     value: 6,
+    //     suit: '♦️',
+    //     color: 'red',
+    // },
       {
-        value: '',
+        value: 'J',
         suit: '👻️',
         color: 'red',
     },
@@ -82,7 +82,7 @@ const useStyles = createStyles((theme) => ({
         }`,
         padding: `${theme.spacing.md}px ${theme.spacing.xs}px`,
         backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[5] : theme.white,
-        marginBottom: theme.spacing.sm,
+        // marginBottom: theme.spacing.sm,
         height: 70,
     },
     
@@ -98,10 +98,26 @@ const useStyles = createStyles((theme) => ({
         width: 60,
     },
 }));
+let data2 = [];
 export default function Welcome(props) {
     const {classes, cx} = useStyles();
     const [state, handlers] = useListState(data);
+    const [state2, handlers2] = useListState(data2);
     const items = state.map((item, index) => (
+        <Draggable key={item.value + item.suit} index={index} draggableId={item.value + item.suit}>
+            {(provided, snapshot) => (
+                <div
+                    className={cx(classes.item, {[classes.itemDragging]: snapshot.isDragging}) }
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    ref={provided.innerRef}
+                >
+                    <Text className={item.color === 'red' ? 'text-red-700' : 'text-black'}>{item.value}{item.suit}</Text>
+                </div>
+            )}
+        </Draggable>
+    ));
+    const items2 = state2.map((item, index) => (
         <Draggable key={item.value + item.suit} index={index} draggableId={item.value + item.suit}>
             {(provided, snapshot) => (
                 <div
@@ -140,18 +156,50 @@ export default function Welcome(props) {
                     )}
                 </div>
                 <DragDropContext
-                    onDragEnd={({destination, source}) =>
-                        handlers.reorder({from: source.index, to: destination?.index || 0})
-                    }
+                    onDragEnd={({destination, source}) => {
+                        console.log(destination, source);
+                        // If moving from list 1 to list 2
+                        if(destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list') {
+                            handlers.remove(source.index);
+                            handlers2.insert(destination.index, state[source.index]);
+                            return;
+                        }
+                        // If moving from list 2 to list 1
+                        if(destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list-2') {
+                            handlers2.remove(source.index);
+                            handlers.insert(destination.index, state2[source.index]);
+                            return;
+                        }
+                        // If moving within list 1
+                        if(destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list') {
+                            handlers.reorder({from: source.index, to: destination.index});
+                            return;
+                        }
+                        // If moving within list 2
+                        if(destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list-2') {
+                            handlers2.reorder({from: source.index, to: destination.index});
+                        }
+                    }}
                 >
-                    <Droppable droppableId="dnd-list" direction="horizontal" >
-                        {(provided) => (
-                            <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-6 md:-space-x-2 h-4">
-                                {items}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </Droppable>
+                    <div className="flex flex-col space-y-24">
+                        <Droppable droppableId="dnd-list" direction="horizontal" >
+                            {(provided) => (
+                                <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-6 md:-space-x-2 border border-blue-500 rounded p-2">
+                                    {items}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                        <Droppable droppableId="dnd-list-2" direction="horizontal" >
+                            {(provided) => (
+                                <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-6 md:-space-x-2 border border-red-500 mt-24 p-2 rounded">
+                                    {items2}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+
+                    </div>
                 </DragDropContext>
             </div>
         </>
