@@ -80,6 +80,7 @@ const useStyles = createStyles((theme) => ({
         marginBottom: theme.spacing.sm,
         height: 70,
     },
+    
 
     itemDragging: {
         boxShadow: theme.shadows.sm,
