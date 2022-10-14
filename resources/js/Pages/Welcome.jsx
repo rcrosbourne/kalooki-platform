@@ -65,6 +65,11 @@ const data = [
         suit: '♦️',
         color: 'red',
     },
+      {
+        value: '',
+        suit: '👻️',
+        color: 'red',
+    },
 ];
 const useStyles = createStyles((theme) => ({
     item: {
@@ -141,7 +146,7 @@ export default function Welcome(props) {
                 >
                     <Droppable droppableId="dnd-list" direction="horizontal" >
                         {(provided) => (
-                            <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-4 md:-space-x-2 h-4">
+                            <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-6 md:-space-x-2 h-4">
                                 {items}
                                 {provided.placeholder}
                             </div>
