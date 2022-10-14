@@ -26,7 +26,7 @@ export default function Login({ status, canResetPassword }) {
 
     const submit = async (e) => {
         e.preventDefault();
-        post(route('login'), {headers: {'X-Socket-Id': await window.Echo.socketId()}});
+        post(route('login'), {headers: {'X-Socket-Id': window.Echo.socketId()}});
     };
 
     return (
