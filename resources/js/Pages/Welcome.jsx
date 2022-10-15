@@ -5,56 +5,56 @@ import {useListState} from '@mantine/hooks';
 import {createStyles, Text} from "@mantine/core";
 
 const data = [
-    {
-        value: 'A',
-        suit: '♠',
-        color: 'black',
-    },
-    {
-        value: 'A',
-        suit: '♣️',
-        color: 'black',
-    },
-    {
-        value: 'A',
-        suit: '♥️',
-        color: 'red',
-    },
-    {
-        value: 'A',
-        suit: '♦️',
-        color: 'red',
-    },
-    {
-        value: 10,
-        suit: '♣️',
-        color: 'black',
-    },
-    {
-        value: 10,
-        suit: '♠',
-        color: 'black',
-    },
-    {
-        value: 10,
-        suit: '♥️',
-        color: 'red',
-    },
-    {
-        value: 10,
-        suit: '♦️',
-        color: 'red',
-    },
-    {
-        value: 6,
-        suit: '♠',
-        color: 'black',
-    },
-    {
-        value: 6,
-        suit: '♣️',
-        color: 'black',
-    },
+    // {
+    //     value: 'A',
+    //     suit: '♠',
+    //     color: 'black',
+    // },
+    // {
+    //     value: 'A',
+    //     suit: '♣️',
+    //     color: 'black',
+    // },
+    // {
+    //     value: 'A',
+    //     suit: '♥️',
+    //     color: 'red',
+    // },
+    // {
+    //     value: 'A',
+    //     suit: '♦️',
+    //     color: 'red',
+    // },
+    // {
+    //     value: 10,
+    //     suit: '♣️',
+    //     color: 'black',
+    // },
+    // {
+    //     value: 10,
+    //     suit: '♠',
+    //     color: 'black',
+    // },
+    // {
+    //     value: 10,
+    //     suit: '♥️',
+    //     color: 'red',
+    // },
+    // {
+    //     value: 10,
+    //     suit: '♦️',
+    //     color: 'red',
+    // },
+    // {
+    //     value: 6,
+    //     suit: '♠',
+    //     color: 'black',
+    // },
+    // {
+    //     value: 6,
+    //     suit: '♣️',
+    //     color: 'black',
+    // },
     {
         value: 6,
         suit: '♥️',
@@ -137,7 +137,9 @@ export default function Welcome(props) {
             window.Echo.leaveChannel(`list-updated`);
         }
     }, []);
-    const items = state.map((item, index) => {
+    const items = state.map(renderItems);
+    const items2 = state2.map(renderItems);
+    function renderItems(item, index) {
         if (item && item.value && item.suit) {
             return <Draggable key={item.value + item.suit} index={index} draggableId={item.value + item.suit}>
                 {(provided, snapshot) => (
@@ -152,23 +154,23 @@ export default function Welcome(props) {
                 )}
             </Draggable>
         }
-    });
-    const items2 = state2.map((item, index) => {
-        if (item &&  item.value && item.suit) {
-            return <Draggable key={item.value + item.suit} index={index} draggableId={item.value + item.suit}>
-                {(provided, snapshot) => (
-                    <div
-                        className={cx(classes.item, {[classes.itemDragging]: snapshot.isDragging})}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        ref={provided.innerRef}
-                    >
-                        <Text className={item.color === 'red' ? 'text-red-700' : 'text-black'}>{item.value}{item.suit}</Text>
-                    </div>
-                )}
-            </Draggable>
-        }
-    });
+    }
+    // const items2 = state2.map((item, index) => {
+    //     if (item &&  item.value && item.suit) {
+    //         return <Draggable key={item.value + item.suit} index={index} draggableId={item.value + item.suit}>
+    //             {(provided, snapshot) => (
+    //                 <div
+    //                     className={cx(classes.item, {[classes.itemDragging]: snapshot.isDragging})}
+    //                     {...provided.draggableProps}
+    //                     {...provided.dragHandleProps}
+    //                     ref={provided.innerRef}
+    //                 >
+    //                     <Text className={item.color === 'red' ? 'text-red-700' : 'text-black'}>{item.value}{item.suit}</Text>
+    //                 </div>
+    //             )}
+    //         </Draggable>
+    //     }
+    // });
     return (
         <>
             <Head title="Welcome"/>
