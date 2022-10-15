@@ -5,56 +5,56 @@ import {useListState} from '@mantine/hooks';
 import {createStyles, Text} from "@mantine/core";
 
 const data = [
-    // {
-    //     value: 'A',
-    //     suit: '♠',
-    //     color: 'black',
-    // },
-    // {
-    //     value: 'A',
-    //     suit: '♣️',
-    //     color: 'black',
-    // },
-    // {
-    //     value: 'A',
-    //     suit: '♥️',
-    //     color: 'red',
-    // },
-    // {
-    //     value: 'A',
-    //     suit: '♦️',
-    //     color: 'red',
-    // },
-    // {
-    //     value: 10,
-    //     suit: '♣️',
-    //     color: 'black',
-    // },
-    // {
-    //     value: 10,
-    //     suit: '♠',
-    //     color: 'black',
-    // },
-    // {
-    //     value: 10,
-    //     suit: '♥️',
-    //     color: 'red',
-    // },
-    // {
-    //     value: 10,
-    //     suit: '♦️',
-    //     color: 'red',
-    // },
-    // {
-    //     value: 6,
-    //     suit: '♠',
-    //     color: 'black',
-    // },
-    // {
-    //     value: 6,
-    //     suit: '♣️',
-    //     color: 'black',
-    // },
+    {
+        value: 'A',
+        suit: '♠',
+        color: 'black',
+    },
+    {
+        value: 'A',
+        suit: '♣️',
+        color: 'black',
+    },
+    {
+        value: 'A',
+        suit: '♥️',
+        color: 'red',
+    },
+    {
+        value: 'A',
+        suit: '♦️',
+        color: 'red',
+    },
+    {
+        value: 10,
+        suit: '♣️',
+        color: 'black',
+    },
+    {
+        value: 10,
+        suit: '♠',
+        color: 'black',
+    },
+    {
+        value: 10,
+        suit: '♥️',
+        color: 'red',
+    },
+    {
+        value: 10,
+        suit: '♦️',
+        color: 'red',
+    },
+    {
+        value: 6,
+        suit: '♠',
+        color: 'black',
+    },
+    {
+        value: 6,
+        suit: '♣️',
+        color: 'black',
+    },
     {
         value: 6,
         suit: '♥️',
@@ -120,56 +120,95 @@ export default function Welcome(props) {
             </Draggable>
         }
     }
-    const moveFromList1ToList2 = (source, destination, state, state2) => {
+    const setItemState = (state, state2) => {
         handlers.setState(state);
         handlers2.setState(state2);
+    }
+    const moveFromList1ToList2 = (source, destination, state, state2) => {
+        setItemState(state, state2);
         const card = state[source.index];
         handlers.remove(source.index);
         handlers2.insert(destination.index, card);
     }
     const moveFromList2ToList1 = (source, destination, state, state2) => {
-        handlers.setState(state);
-        handlers2.setState(state2);
+        setItemState(state, state2);
         const card = state2[source.index];
         handlers2.remove(source.index);
         handlers.insert(destination.index, card);
     }
+    const reorderList1 = (source, destination, state, state2) => {
+        setItemState(state, state2);
+        handlers.reorder({from: source.index, to: destination.index});
+    }
+    const reorderList2 = (source, destination, state, state2) => {
+        setItemState(state, state2);
+        handlers2.reorder({from: source.index, to: destination.index});
+    }
+    const movingFromList1ToList2 = (destination, source) => {
+        return destination && destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list';
+    }
+    const updateServer = (source, destination, state, state2) => {
+        window.axios.post('/api/insert', {
+            source,
+            destination,
+            state,
+            state2,
+            id: window.Echo.socketId(),
+        });
+    }
+    const movingFromList2ToList1 = (destination, source) => {
+        return destination && destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list-2';
+    }
+
+    const reorderingList1 = (destination, source) => {
+        return destination && destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list';
+    }
+
+    const reorderingList2 = (destination, source) => {
+        return destination && destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list-2';
+    }
+    const updateBoard = (destination, source,  state, state2) => {
+        if (movingFromList1ToList2(destination, source)) {
+            moveFromList1ToList2(source, destination, state, state2);
+        }
+        if (movingFromList2ToList1(destination, source)) {
+            moveFromList2ToList1(source, destination, state, state2);
+        }
+        // If moving within list 1
+        if (reorderingList1(destination, source)) {
+            reorderList1(source, destination, state, state2);
+        }
+        // If moving within list 2
+        if (reorderingList2(destination, source)) {
+            reorderList2(source, destination, state, state2);
+        }
+    }
+    const onBoardUpdated = ({data}) => {
+        let {state, state2, source, destination, id} = data;
+        if (id !== window.Echo.socketId()) {
+            updateBoard(destination, source, state, state2);
+        }
+    }
+
+    const onDragEnd = ({source, destination}) => {
+        if (!destination) {
+            return;
+        }
+        updateBoard(destination, source, state, state2);
+        updateServer(source, destination, state, state2);
+    }
 
     const items = state.map(renderItems);
     const items2 = state2.map(renderItems);
+
     useEffect(() => {
         window.Echo.channel('list-updated')
-            .listen('ListUpdate', (e) => {
-                //update the states
-                let {state, state2, source, destination, id} = e.data;
-                if (id !== window.Echo.socketId()) {
-                    handlers2.setState(state2);
-                    handlers.setState(state);
-                    if (destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list') {
-                        moveFromList1ToList2(source, destination, state, state2);
-                    }
-                    if (destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list-2') {
-                        moveFromList2ToList1(source, destination, state, state2);
-                        // let card = state2[source.index];
-                        // handlers2.remove(source.index);
-                        // handlers.insert(destination.index, card);
-                    }
-                    // If moving within list 1
-                    if (destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list') {
-                        handlers.reorder({from: source.index, to: destination.index});
-
-                    }
-                    // If moving within list 2
-                    if (destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list-2') {
-                        handlers2.reorder({from: source.index, to: destination.index});
-                    }
-
-                }
-            });
+            .listen('ListUpdate', (e) => onBoardUpdated(e));
         return () => {
             window.Echo.leaveChannel(`list-updated`);
         }
     }, []);
+
 
     return (
         <>
@@ -196,58 +235,7 @@ export default function Welcome(props) {
                     )}
                 </div>
                 <DragDropContext
-                    onDragEnd={({destination, source}) => {
-                        // console.log(destination, source);
-                        // If moving from list 1 to list 2
-                        if (destination && destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list') {
-                            moveFromList1ToList2(source, destination, state, state2);
-                            //send to server
-                            // console.log(destination, source);
-                            window.axios.post('/api/insert', {
-                                source,
-                                destination,
-                                state,
-                                state2,
-                                id: window.Echo.socketId(),
-                            });
-                            return;
-                        }
-                        // If moving from list 2 to list 1
-                        if (destination && destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list-2') {
-                            moveFromList2ToList1(source, destination, state, state2);
-                            window.axios.post('/api/insert', {
-                                source,
-                                destination,
-                                state,
-                                state2,
-                                id: window.Echo.socketId(),
-                            });
-                            return;
-                        }
-                        // If moving within list 1
-                        if (destination && destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list') {
-                            handlers.reorder({from: source.index, to: destination.index});
-                            window.axios.post('/api/insert', {
-                                source,
-                                destination,
-                                state,
-                                state2,
-                                id: window.Echo.socketId(),
-                            });
-                            return;
-                        }
-                        // If moving within list 2
-                        if (destination && destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list-2') {
-                            handlers2.reorder({from: source.index, to: destination.index});
-                            window.axios.post('/api/insert', {
-                                source,
-                                destination,
-                                state,
-                                state2,
-                                id: window.Echo.socketId(),
-                            });
-                        }
-                    }}
+                    onDragEnd={(result) => onDragEnd(result)}
                 >
                     <div className="flex flex-col space-y-24">
                         <Droppable droppableId="dnd-list" direction="horizontal">
