@@ -103,6 +103,33 @@ export default function Welcome(props) {
     const {classes, cx} = useStyles();
     const [state, handlers] = useListState(data);
     const [state2, handlers2] = useListState(data2);
+
+    const renderItems = (item, index) =>{
+        if (item && item.value && item.suit) {
+            return <Draggable key={item.value + item.suit} index={index} draggableId={item.value + item.suit}>
+                {(provided, snapshot) => (
+                    <div
+                        className={cx(classes.item, {[classes.itemDragging]: snapshot.isDragging})}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        ref={provided.innerRef}
+                    >
+                        <Text className={item.color === 'red' ? 'text-red-700' : 'text-black'}>{item.value}{item.suit}</Text>
+                    </div>
+                )}
+            </Draggable>
+        }
+    }
+    const moveFromList1ToList2 = (source, destination, state, state2) => {
+        handlers.setState(state);
+        handlers2.setState(state2);
+        const card = state[source.index];
+        handlers.remove(source.index);
+        handlers2.insert(destination.index, card);
+    }
+
+    const items = state.map(renderItems);
+    const items2 = state2.map(renderItems);
     useEffect(() => {
         window.Echo.channel('list-updated')
             .listen('ListUpdate', (e) => {
@@ -112,9 +139,7 @@ export default function Welcome(props) {
                     handlers2.setState(state2);
                     handlers.setState(state);
                     if (destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list') {
-                        let card = state[source.index];
-                        handlers.remove(source.index);
-                        handlers2.insert(destination.index, card);
+                        moveFromList1ToList2(source, destination, state, state2);
                     }
                     if (destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list-2') {
                         let card = state2[source.index];
@@ -137,40 +162,7 @@ export default function Welcome(props) {
             window.Echo.leaveChannel(`list-updated`);
         }
     }, []);
-    const items = state.map(renderItems);
-    const items2 = state2.map(renderItems);
-    function renderItems(item, index) {
-        if (item && item.value && item.suit) {
-            return <Draggable key={item.value + item.suit} index={index} draggableId={item.value + item.suit}>
-                {(provided, snapshot) => (
-                    <div
-                        className={cx(classes.item, {[classes.itemDragging]: snapshot.isDragging})}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        ref={provided.innerRef}
-                    >
-                        <Text className={item.color === 'red' ? 'text-red-700' : 'text-black'}>{item.value}{item.suit}</Text>
-                    </div>
-                )}
-            </Draggable>
-        }
-    }
-    // const items2 = state2.map((item, index) => {
-    //     if (item &&  item.value && item.suit) {
-    //         return <Draggable key={item.value + item.suit} index={index} draggableId={item.value + item.suit}>
-    //             {(provided, snapshot) => (
-    //                 <div
-    //                     className={cx(classes.item, {[classes.itemDragging]: snapshot.isDragging})}
-    //                     {...provided.draggableProps}
-    //                     {...provided.dragHandleProps}
-    //                     ref={provided.innerRef}
-    //                 >
-    //                     <Text className={item.color === 'red' ? 'text-red-700' : 'text-black'}>{item.value}{item.suit}</Text>
-    //                 </div>
-    //             )}
-    //         </Draggable>
-    //     }
-    // });
+
     return (
         <>
             <Head title="Welcome"/>
@@ -200,9 +192,7 @@ export default function Welcome(props) {
                         // console.log(destination, source);
                         // If moving from list 1 to list 2
                         if (destination && destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list') {
-                            const card = state[source.index];
-                            handlers.remove(source.index);
-                            handlers2.insert(destination.index, card);
+                            moveFromList1ToList2(source, destination, state, state2);
                             //send to server
                             // console.log(destination, source);
                             window.axios.post('/api/insert', {
