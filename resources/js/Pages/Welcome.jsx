@@ -104,7 +104,7 @@ export default function Welcome(props) {
     const [state, handlers] = useListState(data);
     const [state2, handlers2] = useListState(data2);
 
-    const renderItems = (item, index) =>{
+    const renderItems = (item, index) => {
         if (item && item.value && item.suit) {
             return <Draggable key={item.value + item.suit} index={index} draggableId={item.value + item.suit}>
                 {(provided, snapshot) => (
@@ -127,6 +127,13 @@ export default function Welcome(props) {
         handlers.remove(source.index);
         handlers2.insert(destination.index, card);
     }
+    const moveFromList2ToList1 = (source, destination, state, state2) => {
+        handlers.setState(state);
+        handlers2.setState(state2);
+        const card = state2[source.index];
+        handlers2.remove(source.index);
+        handlers.insert(destination.index, card);
+    }
 
     const items = state.map(renderItems);
     const items2 = state2.map(renderItems);
@@ -142,9 +149,10 @@ export default function Welcome(props) {
                         moveFromList1ToList2(source, destination, state, state2);
                     }
                     if (destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list-2') {
-                        let card = state2[source.index];
-                        handlers2.remove(source.index);
-                        handlers.insert(destination.index, card);
+                        moveFromList2ToList1(source, destination, state, state2);
+                        // let card = state2[source.index];
+                        // handlers2.remove(source.index);
+                        // handlers.insert(destination.index, card);
                     }
                     // If moving within list 1
                     if (destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list') {
@@ -206,9 +214,7 @@ export default function Welcome(props) {
                         }
                         // If moving from list 2 to list 1
                         if (destination && destination.droppableId === 'dnd-list' && source.droppableId === 'dnd-list-2') {
-                            const card = state2[source.index];
-                            handlers2.remove(source.index);
-                            handlers.insert(destination.index, card);
+                            moveFromList2ToList1(source, destination, state, state2);
                             window.axios.post('/api/insert', {
                                 source,
                                 destination,
