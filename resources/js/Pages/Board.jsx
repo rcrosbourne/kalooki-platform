@@ -5,7 +5,6 @@ import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import { useListState, useId } from "@mantine/hooks";
 import GameStats from "@/Components/GameStats";
 import Meld from "@/Components/Meld";
-import GameButton from "@/Components/GameButton";
 import ActionBar from "@/Components/ActionBar";
 
 const cards = [
@@ -24,7 +23,7 @@ export default function Board() {
     return (
         <>
             <Head title="Board" />
-            <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-[#152938] px-[16px] pt-[21px] dark:bg-[#152938] sm:items-center sm:pt-0">
+            <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-dark-blue px-4 pt-5 dark:bg-dark-blue sm:items-center sm:pt-0">
                 <GameStats contract={"2 Threes 1 Fours"} turn={"Nina"} />
                 <DragDropContext
                     onDragEnd={({ source, destination }) =>
@@ -33,7 +32,7 @@ export default function Board() {
                             to: destination.index,
                         })
                     }>
-                    <div className="mt-[30px] grid max-h-[433px] w-full flex-1 grid-cols-4 gap-2 rounded-[10px] border border-[#32373C] bg-[#27577B] p-4">
+                    <div className="mt-8 grid max-h-[433px] w-full flex-1 grid-cols-4 gap-2 rounded-xl border border-light-brown bg-light-blue p-4">
                         <Meld
                             droppableId={"opponentTopThree"}
                             cards={playerHand.slice(0, 3)}
@@ -100,7 +99,7 @@ export default function Board() {
                         <ActionBar />
                         <Meld
                             droppableId={"playerHand"}
-                            className="mt-[20px] flex items-center justify-center p-4 text-gray-50"
+                            className="mt-5 flex items-center justify-center p-4 text-gray-50"
                             cards={playerHand}
                         />
                     </div>

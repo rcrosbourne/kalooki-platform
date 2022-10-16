@@ -5,7 +5,7 @@ export default function GameButton({ type = 'submit', className = '', processing
         <button
             type={type}
             className={
-                `w-full rounded-[3px] bg-[#12B886] py-[8px] px-[10px] font-bold uppercase text-[#CBD6E1] ${
+                `w-full rounded bg-light-green py-3 px-2 font-bold  uppercase text-gray-50 ${
                     processing && 'opacity-25'
                 } ` + className
             }
