@@ -2,7 +2,7 @@ import {Link, Head} from '@inertiajs/inertia-react';
 import React, {useEffect, useState} from 'react';
 import Card from "@/Components/Card";
 import {DragDropContext, Droppable} from "react-beautiful-dnd";
-import {useListState} from "@mantine/hooks";
+import {useListState, useId} from "@mantine/hooks";
 
 const cards = [
     <Card suit={"diamond"} value={"king"} faceUp={true} index={0} key={0}/>,
@@ -29,14 +29,97 @@ export default function Board() {
                 </header>
                 <DragDropContext onDragEnd={({source, destination}) => playerHandHandler.reorder({from: source.index, to: destination.index})}>
                     <div className="flex-1 w-full mt-[30px] bg-[#27577B] border border-[#32373C] rounded-[10px] grid grid-cols-4 max-h-[433px] gap-2 p-4">
-                        <div>Opponent Top Three</div>
-                        <div className="col-start-4">Opponent four</div>
-                        <div className="">Opponent Bottom Three</div>
-                        <div className="col-start-2 row-start-3">Stock Pile</div>
-                        <div className="col-start-3 row-start-3">Discard Pile</div>
-                        <div className="row-start-4">Player Top Three</div>
-                        <div className="row-start-5">Player Bottom Three</div>
-                        <div className="row-start-5 col-start-4">Player Four</div>
+                        <Droppable droppableId="opponentTopThree" direction="horizontal">
+                            {(provided) => (
+                                <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-4">
+                                    {playerHand.slice(0, 3).map((card, index) => (
+                                        <div key={index} className="flex-1">
+                                            {card}
+                                        </div>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                        <Droppable droppableId="opponentFour" direction="horizontal">
+                            {(provided) => (
+                                <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-4 col-start-3 col-span-2">
+                                    {playerHand.slice(3, 7).map((card, index) => (
+                                        <div key={index} className="flex-1">
+                                            {card}
+                                        </div>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                        <Droppable droppableId="opponentBottomThree" direction="horizontal">
+                            {(provided) => (
+                                <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-4">
+                                    {playerHand.slice(2, 5).map((card, index) => (
+                                        <div key={index} className="flex-1">
+                                            {card}
+                                        </div>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                        <div className="col-start-2 row-start-3 grid">
+                            {[12,13,14,15].map((number, index) => (
+                                <div className="col-start-1 row-start-1">
+                                    <Card faceUp={false} index={number} key={Math.floor(number * Math.PI)}/>
+                                </div>
+                            ))}
+                        </div>
+                        <Droppable droppableId="discardPile" direction="none">
+                            {(provided) => (
+                                <div {...provided.droppableProps} ref={provided.innerRef} className="col-start-3 row-start-3 grid">
+                                    {playerHand.slice(3, 7).map((card, index) => (
+                                        <div key={index} className="flex-1 col-start-1 row-start-1">
+                                            {card}
+                                        </div>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                        <Droppable droppableId="playerTopThree" direction="horizontal">
+                            {(provided) => (
+                                <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-1 row-start-4">
+                                    {playerHand.slice(0, 3).map((card, index) => (
+                                        <div key={index} className="flex-1">
+                                            {card}
+                                        </div>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                        <Droppable droppableId="playerBottomThree" direction="horizontal">
+                            {(provided) => (
+                                <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-3 row-start-5">
+                                    {playerHand.slice(3, 7).map((card, index) => (
+                                        <div key={index} className="flex-1">
+                                            {card}
+                                        </div>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                        <Droppable droppableId="playerFour" direction="horizontal">
+                            {(provided) => (
+                                <div {...provided.droppableProps} ref={provided.innerRef} className="flex -space-x-4 row-start-5 col-start-3 col-span-2">
+                                    {playerHand.slice(3, 7).map((card, index) => (
+                                        <div key={index} className="flex-1">
+                                            {card}
+                                        </div>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
                     </div>
                     <div>
                         <menu className="w-full space-x-2 flex items-center justify-between">
@@ -46,7 +129,7 @@ export default function Board() {
                         </menu>
                         <Droppable droppableId="player-hand" direction="horizontal">
                             {(provided) => (
-                                <div {...provided.droppableProps} ref={provided.innerRef} className="mt-[20px] border-2 border-pink-500 p-4 rounded text-gray-50 flex -space-x-4">
+                                <div {...provided.droppableProps} ref={provided.innerRef} className="mt-[20px] p-4 rounded text-gray-50 flex -space-x-4 justify-center items-center">
                                     {playerHand}
                                     {provided.placeholder}
                                 </div>

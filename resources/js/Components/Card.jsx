@@ -1,7 +1,7 @@
 import React from 'react';
 import {createStyles} from "@mantine/core";
 import {Draggable} from "react-beautiful-dnd";
-
+import {useId} from "@mantine/hooks";
 const useStyles = createStyles((theme) => ({
     card: {
         ...theme.fn.focusStyles(),
@@ -51,14 +51,15 @@ const VALUES = {"ace": 'A', "jack": 'J', "queen": 'Q', "king": 'K', "10": 10, "9
 const JOKER = {"value": "joker", "suit": "👻️"};
 export default function Card({suit, value, faceUp, index}) {
     const {classes, cx} = useStyles();
+    const id = useId();
     if (!faceUp) {
         return (
-            <div className={cx(classes.faceDown)}></div>
+            <div className={cx(classes.faceDown)} id={id} key={id}></div>
         );
     }
     if (value === "joker") {
         return (
-            <Draggable key={value + suit} index={index} draggableId={value + suit}>
+            <Draggable key={id} index={index} draggableId={id}>
                 {(provided, snapshot) => (
                     <div className={cx(classes.joker, {[classes.cardDragging]: snapshot.isDragging})}
                          {...provided.draggableProps}
@@ -71,7 +72,7 @@ export default function Card({suit, value, faceUp, index}) {
         );
     }
     return (
-        <Draggable key={value + suit} index={index} draggableId={value + suit}>
+        <Draggable key={id}  draggableId={id} index={index}>
             {(provided, snapshot) => (
                 <div className={cx(classes.card, {[classes.cardDragging]: snapshot.isDragging})}
                      {...provided.draggableProps}
