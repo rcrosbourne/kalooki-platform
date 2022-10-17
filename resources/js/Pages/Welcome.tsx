@@ -3,6 +3,7 @@ import {Link, Head} from '@inertiajs/inertia-react';
 import {DragDropContext, Droppable, Draggable} from 'react-beautiful-dnd';
 import {useListState} from '@mantine/hooks';
 import {createStyles, Text} from "@mantine/core";
+import axios from 'axios';
 import route from '../../../vendor/tightenco/ziggy/dist/index.m';
 
 const data = [
@@ -149,7 +150,7 @@ export default function Welcome(props) {
         return destination && destination.droppableId === 'dnd-list-2' && source.droppableId === 'dnd-list';
     }
     const updateServer = (source, destination, state, state2) => {
-        window.axios.post('/api/insert', {
+        axios.post('/api/insert', {
             source,
             destination,
             state,

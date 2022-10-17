@@ -1,6 +1,13 @@
-import React from 'react';
+import React, { MouseEventHandler } from "react";
+interface Props {
+    type?: 'button' | 'submit' | 'reset' | undefined;
+    className?: string;
+    children: React.ReactNode;
+    processing?: boolean;
+    onClick?: MouseEventHandler<HTMLButtonElement>;
+}
 
-export default function GameButton({ type = 'submit', className = '', processing, children, onClick, }) {
+export default function GameButton({ type = 'submit', className = '', processing, children, onClick }:Props) {
     return (
         <button
             type={type}
