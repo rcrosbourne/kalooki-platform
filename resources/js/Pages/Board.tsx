@@ -10,7 +10,7 @@ import ActionBar from "@/Components/ActionBar";
 const cards = [
     <Card suit={"diamond"} value={"king"} faceUp={true} index={0} key={0} />,
     <Card suit={"diamond"} value={"jack"} faceUp={true} index={1} key={1} />,
-    <Card value={"joker"} faceUp={true} index={2} key={2} />,
+    <Card value={"joker"} faceUp={true} index={2} key={2} suit={"joker"} />,
     <Card value={"queen"} suit={"hearts"} faceUp={true} index={3} key={3} />,
     <Card value={"ace"} suit={"spades"} faceUp={true} index={4} key={4} />,
     <Card value={"2"} suit={"spades"} faceUp={true} index={5} key={5} />,
@@ -54,6 +54,8 @@ export default function Board() {
                                         faceUp={false}
                                         index={number}
                                         key={Math.floor(number * Math.PI)}
+                                        value={"joker"}
+                                        suit={"hearts"}
                                     />
                                 </div>
                             ))}
