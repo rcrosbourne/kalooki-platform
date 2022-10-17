@@ -1,5 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 
+interface Props {
+    type: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url' | 'date' | 'datetime-local' | 'month' | 'time' | 'week' | 'textarea';
+    name: string;
+    value: string;
+    className?: string;
+    autoComplete?: string;
+    isFocused?: boolean;
+    handleChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    required?: boolean;
+}
 export default function TextInput({
     type = 'text',
     name,
@@ -9,12 +19,13 @@ export default function TextInput({
     required,
     isFocused,
     handleChange,
-}) {
-    const input = useRef();
+}:Props) {
+   const input = useRef<HTMLInputElement>(null);
+
 
     useEffect(() => {
         if (isFocused) {
-            input.current.focus();
+            input?.current.focus();
         }
     }, []);
 

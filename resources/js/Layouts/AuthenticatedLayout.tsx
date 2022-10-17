@@ -4,8 +4,19 @@ import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/inertia-react';
+import route from '../../../vendor/tightenco/ziggy/dist/index.m';
 
-export default function Authenticated({ auth, header, children }) {
+interface Props {
+    children: React.ReactNode;
+    auth: {
+        user: {
+            name: string;
+            email: string;
+        }
+    };
+   header: string|React.ReactNode;
+}
+export default function Authenticated({ auth, header, children }: Props) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
     return (

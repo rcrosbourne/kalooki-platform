@@ -3,6 +3,7 @@ import {Link, Head} from '@inertiajs/inertia-react';
 import {DragDropContext, Droppable, Draggable} from 'react-beautiful-dnd';
 import {useListState} from '@mantine/hooks';
 import {createStyles, Text} from "@mantine/core";
+import route from '../../../vendor/tightenco/ziggy/dist/index.m';
 
 const data = [
     {

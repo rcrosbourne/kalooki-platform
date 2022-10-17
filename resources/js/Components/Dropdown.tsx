@@ -1,8 +1,14 @@
-import React, { useState, useContext, Fragment } from 'react';
+import React, { useState, useContext, Fragment, MouseEventHandler } from 'react';
 import { Link } from '@inertiajs/inertia-react';
 import { Transition } from '@headlessui/react';
 
-const DropDownContext = React.createContext();
+interface Context {
+    open: boolean,
+    setOpen: React.Dispatch<React.SetStateAction<boolean>>,
+    toggleOpen: MouseEventHandler<HTMLDivElement>,
+}
+
+const DropDownContext = React.createContext<Context>({} as Context);
 
 const Dropdown = ({ children }) => {
     const [open, setOpen] = useState(false);
