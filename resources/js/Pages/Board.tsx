@@ -8,15 +8,15 @@ import Meld from "@/Components/Meld";
 import ActionBar from "@/Components/ActionBar";
 
 const cards = [
-    <Card suit={"diamond"} value={"king"} faceUp={true} index={0} key={0} />,
-    <Card suit={"diamond"} value={"jack"} faceUp={true} index={1} key={1} />,
-    <Card value={"joker"} faceUp={true} index={2} key={2} suit={"joker"} />,
-    <Card value={"queen"} suit={"hearts"} faceUp={true} index={3} key={3} />,
-    <Card value={"ace"} suit={"spades"} faceUp={true} index={4} key={4} />,
-    <Card value={"2"} suit={"spades"} faceUp={true} index={5} key={5} />,
-    <Card value={"3"} suit={"spades"} faceUp={true} index={6} key={6} />,
-    <Card value={"4"} suit={"spades"} faceUp={true} index={7} key={7} />,
-    <Card value={"5"} suit={"spades"} faceUp={true} index={8} key={8} />,
+    <Card suit={"diamond"} value={"king"} faceDown={false} index={0} key={0} />,
+    <Card suit={"diamond"} value={"jack"} faceDown={false} index={1} key={1} />,
+    <Card value={"joker"} faceDown={false} index={2} key={2} suit={"hearts"}/>,
+    <Card value={"queen"} suit={"hearts"} faceDown={false} index={3} key={3} />,
+    <Card value={"ace"} suit={"spades"} faceDown={false} index={4} key={4} />,
+    <Card value={"2"} suit={"spades"} faceDown={false} index={5} key={5} />,
+    <Card value={"3"} suit={"spades"} faceDown={false} index={6} key={6} />,
+    <Card value={"4"} suit={"spades"} faceDown={false} index={7} key={7} />,
+    <Card value={"5"} suit={"spades"} faceDown={false} index={8} key={8} />,
 ];
 export default function Board() {
     const [playerHand, playerHandHandler] = useListState(cards);
@@ -51,11 +51,11 @@ export default function Board() {
                             {[12, 13, 14, 15].map((number, index) => (
                                 <div className="col-start-1 row-start-1">
                                     <Card
-                                        faceUp={false}
                                         index={number}
                                         key={Math.floor(number * Math.PI)}
                                         value={"joker"}
                                         suit={"hearts"}
+                                        faceDown={true}
                                     />
                                 </div>
                             ))}

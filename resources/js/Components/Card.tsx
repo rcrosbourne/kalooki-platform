@@ -21,15 +21,33 @@ const VALUES = {
 const JOKER = { value: "joker", suit: "👻️" };
 
 export interface CardProps {
-    suit: string;
-    value: string;
-    faceUp: boolean;
+    suit: "spades" | "clubs" | "hearts" | "diamond";
+    value:
+        | "ace"
+        | "jack"
+        | "queen"
+        | "king"
+        | "10"
+        | "9"
+        | "8"
+        | "7"
+        | "6"
+        | "5"
+        | "4"
+        | "3"
+        | "2"
+        | "joker";
     index: number;
+    faceDown?: boolean;
 }
 
-export default function Card({ suit, value, faceUp, index }: CardProps) {
+export default function Card({ suit, value, index, faceDown = false }: CardProps) {
+    const getSuitColor = (suit: "spades" | "clubs" | "hearts" | "diamond") => {
+        return suit === "hearts" || suit === "diamond" ? "text-red-600" : "text-black";
+    }
+
     const id = useId();
-    if (!faceUp) {
+    if (faceDown) {
         return <div className="card faceDown" id={id} key={id}></div>;
     }
     if (value === "joker") {
@@ -60,24 +78,13 @@ export default function Card({ suit, value, faceUp, index }: CardProps) {
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
                     ref={provided.innerRef}>
-                    {/*<div className={"card faceUp"}>*/}
-                    {/*    <span>{VALUES[value]}</span>*/}
-                    {/*    <span>{SUITS[suit]}</span>*/}
-                    {/*</div>*/}
-                    {/*<div className="flex flex-col w-full p-2">*/}
-                    {/*    <div className="flex flex-col justify-start border-2 border-pink-300">*/}
-                    {/*        <span className="text-sm">{VALUES[value]}</span>*/}
-                    {/*        <span className="text-sm -mt-0.5">{SUITS[suit]}</span>*/}
-                    {/*    </div>*/}
-                    {/*    <div className="flex-1 flex items-center justify center w-full border-2 border-green-400"><span className="text-3xl">{SUITS[suit]}</span></div>*/}
-                    {/*</div>*/}
-                    <div className="w-full pl-0.5">
+                    <div className={"w-full pl-0.5 " + getSuitColor(suit)}>
                         <div className="leading-0 text-xs font-bold">{VALUES[value]}</div>
-                        <div className="leading-0 -mt-1 text-xs">
+                        <div className={"leading-0 -mt-1 text-xs"}>
                             {SUITS[suit]}
                         </div>
                     </div>
-                    <div className="-mt-1 flex w-full flex-1 items-center justify-center text-3xl">
+                    <div className={"-mt-1 flex w-full flex-1 items-center justify-center text-3xl " + getSuitColor(suit)}>
                         {SUITS[suit]}
                     </div>
                 </div>
