@@ -101,7 +101,7 @@ export default function Board() {
                         <ActionBar />
                         <Meld
                             droppableId={"playerHand"}
-                            className="mt-5 flex items-center justify-center p-4 text-gray-50"
+                            className="mt-5 flex items-center justify-center p-4"
                             cards={playerHand}
                         />
                     </div>
