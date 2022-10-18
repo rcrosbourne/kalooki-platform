@@ -44,7 +44,7 @@ export default function Card({ suit, value, faceUp, index }: CardProps) {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         ref={provided.innerRef}>
-                        <span>{JOKER.suit}</span>
+                        <span className="text-3xl">{JOKER.suit}</span>
                     </div>
                 )}
             </Draggable>
@@ -60,9 +60,25 @@ export default function Card({ suit, value, faceUp, index }: CardProps) {
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
                     ref={provided.innerRef}>
-                    <div className={"card faceUp"}>
-                        <span>{VALUES[value]}</span>
-                        <span>{SUITS[suit]}</span>
+                    {/*<div className={"card faceUp"}>*/}
+                    {/*    <span>{VALUES[value]}</span>*/}
+                    {/*    <span>{SUITS[suit]}</span>*/}
+                    {/*</div>*/}
+                    {/*<div className="flex flex-col w-full p-2">*/}
+                    {/*    <div className="flex flex-col justify-start border-2 border-pink-300">*/}
+                    {/*        <span className="text-sm">{VALUES[value]}</span>*/}
+                    {/*        <span className="text-sm -mt-0.5">{SUITS[suit]}</span>*/}
+                    {/*    </div>*/}
+                    {/*    <div className="flex-1 flex items-center justify center w-full border-2 border-green-400"><span className="text-3xl">{SUITS[suit]}</span></div>*/}
+                    {/*</div>*/}
+                    <div className="w-full pl-0.5">
+                        <div className="leading-0 text-xs font-bold">{VALUES[value]}</div>
+                        <div className="leading-0 -mt-1 text-xs">
+                            {SUITS[suit]}
+                        </div>
+                    </div>
+                    <div className="-mt-1 flex w-full flex-1 items-center justify-center text-3xl">
+                        {SUITS[suit]}
                     </div>
                 </div>
             )}

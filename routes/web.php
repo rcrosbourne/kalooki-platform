@@ -24,6 +24,9 @@ Route::get('/', function () {
 //          'phpVersion' => PHP_VERSION,
 //      ]);
 });
+Route::get('/mantine', function () {
+  return Inertia::render('MantineBoard', []);
+});
 
 Route::get('/dashboard', function () {
   return Inertia::render('Dashboard');
