@@ -316,6 +316,34 @@ it('returns fours if they exist or empty list if none exist', function ($hand, $
       new Card(Suit::clubs, Rank::eight),
     ],
   ],
+  '2 fours 1 with 4 cards and 1 with 5 cards' => [
+    // Before Sort
+    [
+      new Card(Suit::diamonds, Rank::three),
+      new Card(Suit::clubs, Rank::ace),
+      new Card(Suit::clubs, Rank::five),
+      new Card(Suit::clubs, Rank::six),
+      new Card(Suit::clubs, Rank::seven),
+      new Card(Suit::clubs, Rank::eight),
+      new Card(Suit::hearts, Rank::ten),
+      new Card(Suit::hearts, Rank::jack),
+      new Card(Suit::hearts, Rank::queen),
+      new Card(Suit::hearts, Rank::king),
+      new Card(Suit::hearts, Rank::ace),
+    ],
+    //After sort
+    [
+      new Card(Suit::hearts, Rank::ten),
+      new Card(Suit::hearts, Rank::jack),
+      new Card(Suit::hearts, Rank::queen),
+      new Card(Suit::hearts, Rank::king),
+      new Card(Suit::hearts, Rank::ace),
+      new Card(Suit::clubs, Rank::five),
+      new Card(Suit::clubs, Rank::six),
+      new Card(Suit::clubs, Rank::seven),
+      new Card(Suit::clubs, Rank::eight),
+    ],
+  ],
   '0 fours' => [
     // Before Sort
     [
