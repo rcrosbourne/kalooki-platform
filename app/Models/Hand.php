@@ -3,17 +3,25 @@
 namespace App\Models;
 
 use App\Enums\Suit;
-use App\Providers\AppServiceProvider;
 
 class Hand {
 
-  public function __construct(public array $cards) {
-  }
+  /**
+   * Constructor
+   * @param  array  $cards
+   */
+  public function __construct(public array $cards) {}
 
+  /**
+   * Sort cards according to suit as described at the location below:
+   * The natural order of suits is: Spades, Hearts, Clubs, Diamonds.
+   *
+   * @source https://www.deceptionary.com/aboutsuits.html
+   * @param  array  $cards
+   *
+   * @return array
+   */
   public static function sortBySuit(array $cards): array {
-    //source: https://www.deceptionary.com/aboutsuits.html
-    //natural order of suits is
-    // clubs < diamonds < hearts < spades
     if (empty($cards)) {
       return $cards;
     }
@@ -21,6 +29,14 @@ class Hand {
     return array_merge(...Hand::groupCardsBySuit($cards));
   }
 
+  /**
+   * Sort cards according to rank. For this instance we are using a High Ace only
+   * The natural order of ranks is: 2, 3, 4, 5, 6, 7, 8, 9, 10, Jack, Queen, King, Ace.
+   *
+   * @param  array  $cards
+   *
+   * @return array
+   */
   public static function sortByRank(array $cards = []): array {
     if (empty($cards)) {
       return $cards;
@@ -29,23 +45,117 @@ class Hand {
     return $cards;
   }
 
+  /**
+   * Sort cards according to suit then subsequently by rank.
+   *
+   * @param  array  $cards
+   *
+   * @return array
+   */
   public static function sortBySuitThenRank(array $cards): array {
     $cardSortedBySuit = Hand::groupCardsBySuit($cards);
     return array_merge(...array_map(fn($cards) => Hand::sortByRank($cards), $cardSortedBySuit));
   }
 
-  public function containsThree(): array {
-    $cards = Hand::sortByRank($this->cards);
-    $cards = array_map(fn($card) => $card->rank->value(), $cards);
-    $cards = array_count_values($cards);
-    $cards = array_filter($cards, fn($count) => $count >= 3);
-    $cardsWithThree = array_keys($cards);
-    $filteredThrees
-      = array_filter($this->cards, fn($card) => in_array($card->rank->value(), $cardsWithThree));
-    return Hand::sortByRank(Hand::sortBySuit(array_values($filteredThrees)));
+  /**
+   * Sort cards according to rank then subsequently by suit.
+   *
+   * @param  array  $cards
+   *
+   * @return array
+   */
+  public static function sortByRankThenOrderRankBySuit(array $cards): array {
+    return Hand::sortByRank(Hand::sortBySuit(array_values($cards)));
   }
 
   /**
+   * Returns an array of threes if it exists, or empty array if it does not.
+   * A "three" is a set of three or more cards of the same rank, such as 5-5-5 or K-K-K-K-K.
+   * The array is sorted by Rank then Suit. E.g [K♠-K♣-K♥, 5♦-5♠-5♥] => [5♠-5♥-5♦, K♠-K♥-K♣]
+   *
+   * @source: https://www.pagat.com/rummy/kaluki2.html
+   *
+   * @return array
+   */
+  public function containsThree(): array {
+    // Sort cards by rank so all cards of the same rank are next to each other
+    $cards = Hand::sortByRank($this->cards);
+    $cardRanksThatAreThrees = $this->findRanksThatContainThreeOrMoreCards($cards);
+    // filter cards that are threes from list of cards
+    if (empty($cardRanksThatAreThrees)) {
+      return [];
+    }
+    $threes
+      = array_filter($this->cards, fn($card) => in_array($card->rank->value(), array_keys($cardRanksThatAreThrees)));
+    // Sort cards by rank then order each rank by suit
+    return Hand::sortByRankThenOrderRankBySuit($threes);
+  }
+
+  /**
+   * Returns an array of fours if it exists, or empty array if it does not.
+   * A "four" is a run of four or more consecutive cards in the same suit, such as 8♥-9♥-10♥-J♥-Q♥.
+   * The list is sorted by suit order then rank. E.g [8♣-9♣-10♣-J♣-Q♣, 8♠-9♠-10♠-J♠-Q♠ ] => [8♠-9♠-10♠-J♠-Q♠, 8♣-9♣-10♣-J♣-Q♣]
+   *
+   * @source https://www.pagat.com/rummy/kaluki2.html
+   * @return array
+   */
+  public function containsFour(): array {
+    // Sort cards by suit so all cards of the same suit are next to each other
+    $cards = Hand::sortBySuit($this->cards);
+    // Find the count of cards per suit
+    $cards = $this->findSuitsThatContainFourOrMoreCards($cards);
+    // empty then no fours exist, we can return early
+    if (empty($cards)) {
+      return [];
+    }
+    // Sequence Array
+    $sequence = [];
+    foreach ($cards as $suit => $possibleFours) {
+      $fours = array_filter($this->cards, fn($card) => $card->suit->value()
+        === $suit);
+      $sequence
+        = array_merge($sequence, $this->returnSequenceOfFourOrMore($fours));
+    }
+    return $sequence;
+  }
+
+  /**
+   * Utility function that returns an array of cards that are in sequence.
+   * E.g [8♣-9♣-10♣-J♣-Q♣-8♠-2♠-3♠-J♠-Q♠ ] => [8♣-9♣-10♣-J♣-Q♣]
+   *
+   * @param  array  $cards
+   *
+   * @return array
+   */
+  protected function returnSequenceOfFourOrMore(array $cards): array {
+    $sequence = [];
+    // Sort cards by rank
+    $foursSorted = Hand::sortByRank($cards);
+    // check if a sequence exists
+    foreach ($foursSorted as $key => $card) {
+      if ($key === 0) {
+        $sequence[] = $card;
+        continue;
+      }
+      if ($card->rank->value() !== $foursSorted[$key - 1]->rank->value() + 1) {
+        // if we already found a sequence of 4, return it
+        if (count($sequence) >= 4) {
+          return $sequence;
+        }
+        // if it's not the last element start a new sequence.
+        if ($key !== count($foursSorted) - 1) {
+          $sequence = [$card];
+          continue;
+        }
+      }
+      $sequence[] = $card;
+    }
+    return $sequence;
+  }
+
+  /**
+   * Utility function that groups cards by suit.
+   *
    * @param  array  $cards
    *
    * @return array
@@ -81,6 +191,34 @@ class Hand {
     // Sort arrays by count of elements
     usort($cardSuits, fn($a, $b) => count($b) <=> count($a));
     return $cardSuits;
+  }
+
+  /**
+   * Utility function that find card ranks that contain three or more cards.
+   *
+   * @param  array  $cards
+   *
+   * @return array
+   */
+  protected function findRanksThatContainThreeOrMoreCards(array $cards): array {
+    // Get card values and count the number of times each value appears
+    $countOfCardsPerRank = array_count_values(array_map(fn($card) => $card->rank->value(), $cards));
+    // Filter out cards that don't appear 3 or more times
+    return array_filter($countOfCardsPerRank, fn($count) => $count >= 3);
+  }
+
+  /**
+   * Utility function that find card suits that contain four or more cards.
+   *
+   * @param  array  $cards
+   *
+   * @return array
+   */
+  protected function findSuitsThatContainFourOrMoreCards(array $cards): array {
+    $countOfCardsPerSuit
+      = array_count_values(array_map(fn($card) => $card->suit->value(), $cards));
+    // Filter out suits that are not four or more
+    return array_filter($countOfCardsPerSuit, fn($count) => $count >= 4);
   }
 
 }
