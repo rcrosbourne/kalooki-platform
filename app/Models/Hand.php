@@ -85,6 +85,12 @@ class Hand {
     if (empty($cardRanksThatAreThrees)) {
       return [];
     }
+//    $threes = [];
+//    foreach ($cardRanksThatAreThrees as $cardRank) {
+//      $cards = Hand::sortByRankThenOrderRankBySuit(array_filter($cards, fn($card) => $card->rank->value() !== $cardRank));
+//      $threes[] = $cards;
+//    }
+//    return $threes;
     $threes
       = array_filter($this->cards, fn($card) => in_array($card->rank->value(), array_keys($cardRanksThatAreThrees)));
     // Sort cards by rank then order each rank by suit
