@@ -21,4 +21,13 @@ enum Suit: string {
     };
   }
 
+  public static function fromString(string $suit): Suit {
+    return match ($suit) {
+      '♠' => Suit::spades,
+      '♥' => Suit::hearts,
+      '♣' => Suit::clubs,
+      '♦' => Suit::diamonds,
+    };
+  }
+
 }

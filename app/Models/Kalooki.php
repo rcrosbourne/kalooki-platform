@@ -4,8 +4,9 @@ namespace App\Models;
 
 class Kalooki {
 
-  public function __construct(public array $players = [], public bool $started = FALSE, public array $deck = []) {
-    $this->deck = $this->createDeck();
+  public function __construct(public array $players = [], public bool $started = FALSE,
+    public array $deck = [], public array $discard = [], public array $stock = []) {
+    $this->deck = count($deck) === 0 ? $this->createDeck() : $deck;
   }
 
   public function addPlayer(Player $player): void {
@@ -33,6 +34,10 @@ class Kalooki {
       $playerIndex = $i % $playerCount;
       $this->players[$playerIndex]->hand[] = array_pop($this->deck);
     }
+    // Add 1 card to the discard pile.
+    $this->discard[] = array_pop($this->deck);
+    // Add the rest of the cards to the stock pile.
+    $this->stock = $this->deck;
   }
 
   public function shuffleDeck(): void {
@@ -44,4 +49,16 @@ class Kalooki {
     return array_merge(Deck::cards(), Deck::cards());
   }
 
+  public static function fake(array $data = []): Kalooki {
+    $deck = array_map(fn($cardString) => Card::fromString($cardString), $data['deck'] ?? []);
+    $discard = array_map(fn($cardString) => Card::fromString($cardString), $data['discard'] ?? []);
+    $stock = array_map(fn($cardString) => Card::fromString($cardString), $data['stock'] ?? []);
+    return new Kalooki(
+      players: $data['players'] ?? [],
+      started: $data['started'] ?? FALSE,
+      deck: $deck,
+      discard: $discard,
+      stock: $stock,
+    );
+  }
 }

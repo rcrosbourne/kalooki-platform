@@ -37,4 +37,24 @@ enum Rank: string {
             self::ace => 14,
         };
     }
+
+  public static function fromString(string $rank): Rank
+    {
+        return match($rank)
+        {
+            '2' => self::two,
+            '3' => self::three,
+            '4' => self::four,
+            '5' => self::five,
+            '6' => self::six,
+            '7' => self::seven,
+            '8' => self::eight,
+            '9' => self::nine,
+            '10' => self::ten,
+            'J' => self::jack,
+            'Q' => self::queen,
+            'K' => self::king,
+            'A' => self::ace,
+        };
+    }
 }
