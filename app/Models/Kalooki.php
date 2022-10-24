@@ -32,7 +32,7 @@ class Kalooki {
     $cardsToDeal = $playerCount * $cardsPerPlayer;
     for ($i = 0; $i < $cardsToDeal; $i++) {
       $playerIndex = $i % $playerCount;
-      $this->players[$playerIndex]->hand[] = array_pop($this->deck);
+      $this->players[$playerIndex]->hand->cards[] = array_pop($this->deck);
     }
     // Add 1 card to the discard pile.
     $this->discard[] = array_pop($this->deck);

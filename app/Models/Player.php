@@ -4,7 +4,9 @@ namespace App\Models;
 
 class Player {
 
-  public function __construct(public string $name, public Hand $hand) {}
+  public function __construct(public string $name, public ?Hand $hand = null) {
+    $this->hand = $hand ?: new Hand([]);
+  }
 
   /**
    * @param  array  $data
