@@ -141,7 +141,7 @@ it('can sort cards by suit then by rank', function ($hand, $expectation) {
 
 it('returns threes if they exist or empty list if none exist', function ($hand, $expectation) {
   $hand = new Hand($hand);
-  expect($hand->containsThree())->toEqual($expectation);
+  expect(Hand::containsThree($hand->cards))->toEqual($expectation);
 })->with([
   '1 three with 3 cards'  => [
     // Before Sort
@@ -249,7 +249,7 @@ it('returns threes if they exist or empty list if none exist', function ($hand, 
 
 it('returns fours if they exist or empty list if none exist', function ($hand, $expectation) {
   $hand = new Hand($hand);
-  expect($hand->containsFour())->toEqual($expectation);
+  expect(Hand::containsFour($hand->cards))->toEqual($expectation);
 })->with([
   '1 four with 4 cards'                                      => [
     // Before Sort

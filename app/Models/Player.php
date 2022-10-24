@@ -28,16 +28,16 @@ class Player {
     $fours = 0;
     // Detect how many threes and fours are in the hand
     $threes = $this->hand->containsThree();
-    $fours = $this->hand->containsFour();
-    dd($fours);
-//    $intersect = array_intersect($threes, $fours);
-    foreach ($intersect as $key => $value) {
-      unset($this->hand->cards[$key]);
-      unset($this->hand->cards[$key]);
+    if(count($threes) >= 2) {
+      // remove the 3s from the hand
+
+      $fours = $this->hand->containsFour();
     }
-    $threes = $this->hand->containsThree();
     $fours = $this->hand->containsFour();
-    dd($intersect, $threes, $fours);
+//    $intersect = array_intersect($threes, $fours);
+
+//    $threes = $this->hand->containsThree();
+//    $fours = $this->hand->containsFour();
     // If there are 2 threes and 1 four then the contract is satisfied
     // cards belonging to a three cannot belong to a four
 
