@@ -85,16 +85,11 @@ class Hand {
     if (empty($cardRanksThatAreThrees)) {
       return [];
     }
-//    $threes = [];
-//    foreach ($cardRanksThatAreThrees as $cardRank) {
-//      $cards = Hand::sortByRankThenOrderRankBySuit(array_filter($cards, fn($card) => $card->rank->value() !== $cardRank));
-//      $threes[] = $cards;
-//    }
-//    return $threes;
-    $threes
-      = array_filter($this->cards, fn($card) => in_array($card->rank->value(), array_keys($cardRanksThatAreThrees)));
-    // Sort cards by rank then order each rank by suit
-    return Hand::sortByRankThenOrderRankBySuit($threes);
+    $threes = [];
+    foreach (array_keys($cardRanksThatAreThrees) as $cardRank) {
+      $threes[] = Hand::sortByRankThenOrderRankBySuit(array_filter($cards, fn($card) => $card->rank->value() === $cardRank));
+    }
+    return $threes;
   }
 
   /**
@@ -119,8 +114,9 @@ class Hand {
     foreach ($cards as $suit => $possibleFours) {
       $fours = array_filter($this->cards, fn($card) => $card->suit->value()
         === $suit);
-      $sequence
-        = array_merge($sequence, $this->returnSequenceOfFourOrMore($fours));
+      $sequence[] = $this->returnSequenceOfFourOrMore($fours);
+//      $sequence
+//        = array_merge($sequence, $this->returnSequenceOfFourOrMore($fours));
     }
     return $sequence;
   }
