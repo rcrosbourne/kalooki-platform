@@ -40,7 +40,6 @@ it('can detect when a player satisfies the contract condition', function () {
   $game = Kalooki::fake([
     'players' => [
       Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '2♣', '3♣', '4♣', '5♣', 'A♣', 'K♣']]),
-      Player::fake(['hand' => ['4♠', '4♥', '4♦', '4♣', '5♠', '5♥', '5♦', '5♣', '6♠', '6♥', '6♦', '6♣']]),
     ],
     'discard' => ['7♠'],
     'stock' => [
@@ -49,6 +48,82 @@ it('can detect when a player satisfies the contract condition', function () {
     ],
   ]);
   $player1 = $game->players[0];
-  $player2 = $game->players[1];
-  expect($player1->contractSatisfied())->toBeTrue();
-})->skip();
+  expect($player1->contractSatisfied())->toHaveCount(2);
+});
+it('can detect when a player does not have a solution', function () {
+ $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['A♠', 'A♥', '2♠', '2♥', '2♦', '2♣', '9♣', '10♣', 'Q♣', 'A♣', 'K♣']]),
+    ],
+    'discard' => ['7♠'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+    ],
+  ]);
+  $player1 = $game->players[0];
+  expect($player1->contractSatisfied())->toHaveCount(0);
+});
+
+it('can detect when a player has overlapping cards but have a solution', function () {
+ $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['J♠', 'J♥', 'J♦', '2♠', '2♥', '2♦', '2♣', '10♣', 'J♣', 'Q♣', 'A♣', 'K♣']]),
+    ],
+    'discard' => ['7♠'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+    ],
+  ]);
+  $player1 = $game->players[0];
+  expect($player1->contractSatisfied())->toHaveCount(2);
+});
+
+it('can detect when a player has long sequence but have a solution', function () {
+ $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['10♠', '10♥', 'J♦', '2♠', '2♥', '2♦', '2♣', '9♣', '10♣', 'J♣', 'Q♣', 'A♣', 'K♣']]),
+    ],
+    'discard' => ['7♠'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+    ],
+  ]);
+  $player1 = $game->players[0];
+  expect($player1->contractSatisfied())->toHaveCount(2);
+});
+
+it('can detect when a player has 2 sequences but only one is a valid solution', function () {
+ $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['J♠', 'J♥', 'J♦', 'K♠', 'K♥','2♠', '3♠', '4♠', '5♠', 'J♣', 'Q♣', 'A♣', 'K♣']]),
+    ],
+    'discard' => ['7♠'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+    ],
+  ]);
+  $player1 = $game->players[0];
+  expect($player1->contractSatisfied())->toHaveCount(2);
+});
+it('it validates that the winning conditions do not have cards in common', function () {
+ $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '2♣', '3♣', '4♣', '5♣', 'A♣', 'K♣']]),
+    ],
+    'discard' => ['7♠'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+    ],
+  ]);
+  $player1 = $game->players[0];
+  $solution = $player1->contractSatisfied();
+  $cardsUsedInThrees = collect($solution['threes'])->flatten()->toArray();
+  $cardsUsedInFours = collect($solution['fours'])->flatten()->toArray();
+  // validate that cards used in threes and fours are not in common
+  expect(array_intersect($cardsUsedInThrees, $cardsUsedInFours))->toHaveCount(0);
+});

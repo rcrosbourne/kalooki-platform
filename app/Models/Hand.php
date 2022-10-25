@@ -79,6 +79,8 @@ class Hand {
    *
    * @source: https://www.pagat.com/rummy/kaluki2.html
    *
+   * @param  array  $cards
+   *
    * @return array
    */
   public static function containsThree(array $cards = []): array {
@@ -107,6 +109,8 @@ class Hand {
    * [8♣-9♣-10♣-J♣-Q♣, 8♠-9♠-10♠-J♠-Q♠ ] => [8♠-9♠-10♠-J♠-Q♠, 8♣-9♣-10♣-J♣-Q♣]
    *
    * @source https://www.pagat.com/rummy/kaluki2.html
+   * @param  array  $cards
+   *
    * @return array
    */
   public static function containsFour(array $cards = []): array {
@@ -114,6 +118,7 @@ class Hand {
     $sortedCards = Hand::sortBySuit($cards);
     // Find the count of cards per suit
     $sortedCards = self::findSuitsThatContainFourOrMoreCards($sortedCards);
+
     // empty then no fours exist, we can return early
     if (empty($sortedCards)) {
       return [];
@@ -150,7 +155,7 @@ class Hand {
         continue;
       }
       if ($card->rank->value() !== $foursSorted[$key - 1]->rank->value() + 1) {
-        // if we already found a sequence of 4, return it
+//     if we already found a sequence of 4, return it
         if (count($sequence) >= 4) {
           return $sequence;
         }
@@ -162,7 +167,7 @@ class Hand {
       }
       $sequence[] = $card;
     }
-    return $sequence;
+    return count($sequence) >= 4 ? $sequence : [];
   }
 
   /**
@@ -232,6 +237,31 @@ class Hand {
       = array_count_values(array_map(fn($card) => $card->suit->value(), $cards));
     // Filter out suits that are not four or more
     return array_filter($countOfCardsPerSuit, fn($count) => $count >= 4);
+  }
+
+  public static function removeCards(array $cards, array $threesOrFours): array {
+    foreach ($threesOrFours as $threesOrFour) {
+      foreach ($threesOrFour as $card) {
+        $key = array_search($card, $cards);
+        unset($cards[$key]);
+      }
+    }
+    return $cards;
+  }
+
+  public static function containsCard(array &$threesOrFours, Card $card): bool {
+    foreach ($threesOrFours as $index => $threesOrFour) {
+      if (in_array($card, $threesOrFour)) {
+        if(count($threesOrFour) <= 3) {
+          return true;
+        }
+        // remove the card and return false
+        $key = array_search($card, $threesOrFour);
+        unset($threesOrFours[$index][$key]);
+        return false;
+      }
+    }
+    return false;
   }
 
 }

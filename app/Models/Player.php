@@ -22,25 +22,32 @@ class Player {
     );
   }
 
-  public function contractSatisfied():bool {
+  public function contractSatisfied():array {
     // contract is 2 threes 1 four
-    $threes = 0;
-    $fours = 0;
+    // this is the array we will mutate
+    $cards = $this->hand->cards;
+    $solution = [];
     // Detect how many threes and fours are in the hand
-    $threes = $this->hand->containsThree();
-    if(count($threes) >= 2) {
-      // remove the 3s from the hand
-
-      $fours = $this->hand->containsFour();
+    $threes = Hand::containsThree($cards);
+    $fours = Hand::containsFour($cards);
+    if(count($threes) < 2 || count($fours) < 1) {
+      return [];
     }
-    $fours = $this->hand->containsFour();
-//    $intersect = array_intersect($threes, $fours);
 
-//    $threes = $this->hand->containsThree();
-//    $fours = $this->hand->containsFour();
-    // If there are 2 threes and 1 four then the contract is satisfied
-    // cards belonging to a three cannot belong to a four
-
-    return $threes >= 2 && $fours >= 1;
+    //let's iterate over the fours and check if the card exist in the three
+    $sequence = [];
+    foreach ($fours as $four) {
+      foreach($four as $card) {
+        if(count($sequence) >= 4) {
+          break;
+        }
+        $sequence = Hand::containsCard($threes, $card) ? [] : array_merge($sequence, [$card]);
+      }
+    }
+    if(count($sequence) === 4) {
+      $solution['fours'] = $sequence;
+      $solution['threes'] = $threes;
+    }
+    return $solution;
   }
 }
