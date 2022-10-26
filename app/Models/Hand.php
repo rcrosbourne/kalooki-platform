@@ -126,9 +126,10 @@ class Hand {
     // Sequence Array
     $sequence = [];
     foreach ($sortedCards as $suit => $amount) {
-      $fours = array_filter($cards, function ($c) use($suit) {
+      $fours = array_filter($cards, function ($c) use ($suit) {
         return $c->suit->value() === Suit::fromString($suit)->value();
       });
+
       $sequence[] = self::returnSequenceOfFourOrMore($fours);
       //      $sequence
       //        = array_merge($sequence, $this->returnSequenceOfFourOrMore($fours));
@@ -148,24 +149,34 @@ class Hand {
     $sequence = [];
     // Sort cards by rank
     $foursSorted = Hand::sortByRank($cards);
+    // remove duplicates
+    foreach ($foursSorted as $key => $card) {
+      if (isset($foursSorted[$key + 1])
+        && $card->rank->value() === $foursSorted[$key + 1]->rank->value()
+      ) {
+        unset($foursSorted[$key + 1]);
+      }
+    }
+    $foursSorted = array_values($foursSorted);
     // check if a sequence exists
     foreach ($foursSorted as $key => $card) {
+      // if we already found a sequence of 4, return it
+
       if ($key === 0) {
         $sequence[] = $card;
         continue;
       }
       if ($card->rank->value() !== $foursSorted[$key - 1]->rank->value() + 1) {
-//     if we already found a sequence of 4, return it
+        // if it's not the last element start a new sequence.
         if (count($sequence) >= 4) {
           return $sequence;
         }
-        // if it's not the last element start a new sequence.
         if ($key !== count($foursSorted) - 1) {
           $sequence = [$card];
-          continue;
         }
+      } else {
+        $sequence[] = $card;
       }
-      $sequence[] = $card;
     }
     return count($sequence) >= 4 ? $sequence : [];
   }
@@ -251,17 +262,39 @@ class Hand {
 
   public static function containsCard(array &$threesOrFours, Card $card): bool {
     foreach ($threesOrFours as $index => $threesOrFour) {
+      // if the card is in list of threes and the number of threes is less than 3
+      // then we can't use it and return true
       if (in_array($card, $threesOrFour)) {
-        if(count($threesOrFour) <= 3) {
-          return true;
+        if (count($threesOrFour) <= 3) {
+          return TRUE;
         }
+        // otherwise we can use it. We remove the card from the list of threes and return false
         // remove the card and return false
         $key = array_search($card, $threesOrFour);
         unset($threesOrFours[$index][$key]);
-        return false;
+        return FALSE;
       }
     }
-    return false;
+    return FALSE;
+  }
+
+  public static function canAddCardToThrees(array &$threes, Card $card): int {
+    foreach ($threes as $index => $three) {
+      if ($card->rank->value() === $three[0]->rank->value()) {
+        return $index;
+      }
+    }
+    return -1;
+  }
+
+  public static function canAddCardToFours(array $sequence, card $card): int {
+    // can card be added to the end of the sequence
+    if ($card->rank->value() === $sequence[count($sequence) - 1]->rank->value()
+      + 1
+    ) {
+      return count($sequence);
+    }
+    return -1;
   }
 
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Card;
 use App\Models\Kalooki;
 use App\Models\Player;
 
@@ -126,4 +127,71 @@ it('it validates that the winning conditions do not have cards in common', funct
   $cardsUsedInFours = collect($solution['fours'])->flatten()->toArray();
   // validate that cards used in threes and fours are not in common
   expect(array_intersect($cardsUsedInThrees, $cardsUsedInFours))->toHaveCount(0);
+});
+
+it('adds eligible cards to the end of four if applicable', function () {
+  $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '2♣', '3♣', '4♣', '5♣', 'A♣', '6♣']]),
+      ],
+      'discard' => ['7♠'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+    $player1 = $game->players[0];
+    $solution = $player1->contractSatisfied();
+    $cardsUsedInSolution = collect($solution)->flatten()->toArray();
+    // validate that cards used in threes and fours are not in common
+    // no cards should be left over
+    expect(array_diff($player1->hand->cards, $cardsUsedInSolution))->toHaveCount(0);
+});
+
+it('adds eligible cards if applicable', function () {
+  $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '7♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+    ],
+    'discard' => ['7♠'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+    ],
+  ]);
+  $player1 = $game->players[0];
+  $solution = $player1->contractSatisfied();
+  $cardsUsedInSolution = collect($solution)->flatten()->toArray();
+  // validate that cards used in threes and fours are not in common
+  // no cards should be left over
+  expect(array_diff($player1->hand->cards, $cardsUsedInSolution))->toHaveCount(0);
+});
+
+it('does not add ineligible cards if applicable', function () {
+  $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => ['7♠'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+    $player1 = $game->players[0];
+    $solution = $player1->contractSatisfied();
+    $cardsUsedInSolution = collect($solution)->flatten()->toArray();
+    // validate that cards used in threes and fours are not in common
+    //'8♣' and '4♣' should not be used
+    // validate that '8♣' and '4♣' are not in the solution
+    $unusedCards = array_diff($player1->hand->cards, $cardsUsedInSolution);
+    $eightClubs = array_filter($unusedCards, function (Card $card) {
+      return $card->suit === \App\Enums\Suit::clubs && $card->rank === \App\Enums\Rank::eight;
+    });
+    $fourClubs = array_filter($unusedCards, function (Card $card) {
+      return $card->suit === \App\Enums\Suit::clubs && $card->rank === \App\Enums\Rank::four;
+    });
+    expect($eightClubs)->toHaveCount(1)
+      ->and($fourClubs)->toHaveCount(1)
+      ->and($unusedCards)->toHaveCount(2);
 });
