@@ -2,6 +2,11 @@
 
 namespace App\Models;
 
+
+use App\Events\ListUpdate;
+use App\Events\PlayerRequestsCardFromStock;
+use Illuminate\Auth\Events\Registered;
+
 class Player {
 
   public function __construct(public string $name, public ?Hand $hand = NULL) {
@@ -21,6 +26,10 @@ class Player {
       name: $data['name'] ?? 'Player',
       hand: $hand,
     );
+  }
+
+  public function drawFromStock(Kalooki &$game): void {
+    event(new PlayerRequestsCardFromStock($this, $game));
   }
 
   /**

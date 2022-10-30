@@ -3,7 +3,9 @@
 use App\Models\Card;
 use App\Models\Kalooki;
 use App\Models\Player;
+use Tests\TestCase;
 
+uses(TestCase::class);
 it('uses 2 standard 52 card decks', function () {
   $kalooki = new Kalooki();
   expect(count($kalooki->deck))->toBe(104);
@@ -194,4 +196,23 @@ it('does not add ineligible cards if applicable', function () {
     expect($eightClubs)->toHaveCount(1)
       ->and($fourClubs)->toHaveCount(1)
       ->and($unusedCards)->toHaveCount(2);
+});
+
+it('allows a player to draw from the stock pile of cards', function () {
+  $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => ['7♠'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+    $player1 = $game->players[0];
+    expect($player1->hand->cards)->toHaveCount(12)
+      ->and($game->stock)->toHaveCount(27);
+    $player1->drawFromStock($game);
+    expect($player1->hand->cards)->toHaveCount(13)
+      ->and($game->stock)->toHaveCount(26);
 });

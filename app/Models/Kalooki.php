@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Events\PlayerRequestsCardFromStock;
+
 class Kalooki {
 
-  public function __construct(public array $players = [], public bool $started = FALSE,
-    public array $deck = [], public array $discard = [], public array $stock = []) {
+  public function __construct(
+    public array $players = [], public bool $started = FALSE,
+    public array $deck = [], public array $discard = [], public array $stock = [],
+  ) {
     $this->deck = count($deck) === 0 ? $this->createDeck() : $deck;
   }
 
@@ -50,9 +54,15 @@ class Kalooki {
   }
 
   public static function fake(array $data = []): Kalooki {
-    $deck = array_map(fn($cardString) => Card::fromString($cardString), $data['deck'] ?? []);
-    $discard = array_map(fn($cardString) => Card::fromString($cardString), $data['discard'] ?? []);
-    $stock = array_map(fn($cardString) => Card::fromString($cardString), $data['stock'] ?? []);
+    $deck
+      = array_map(fn($cardString) => Card::fromString($cardString), $data['deck']
+      ?? []);
+    $discard
+      = array_map(fn($cardString) => Card::fromString($cardString), $data['discard']
+      ?? []);
+    $stock
+      = array_map(fn($cardString) => Card::fromString($cardString), $data['stock']
+      ?? []);
     return new Kalooki(
       players: $data['players'] ?? [],
       started: $data['started'] ?? FALSE,
@@ -61,4 +71,12 @@ class Kalooki {
       stock: $stock,
     );
   }
+
+  public function playerRequestsCardFromStock(PlayerRequestsCardFromStock $event): void {
+    $player = $event->player;
+    $game = $event->game;
+    $card = array_pop($game->stock);
+    $player->hand->cards[] = $card;
+  }
+
 }
