@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 class Player {
 
   public function __construct(public string $name, public ?Hand $hand = NULL, public ?string $id = NULL,
-    public array $layedDownThrees = [], public array $layedDownFours = []) {
+    public array $laidDownThrees = [], public array $laidDownFours = []) {
     $this->hand = $hand ?: new Hand([]);
     $this->id = $id ?: (string) Str::orderedUuid();
   }

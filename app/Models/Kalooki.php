@@ -144,9 +144,13 @@ class Kalooki {
    * @param  mixed  $player
    *
    * @return void
+   * @throws \App\Exceptions\IllegalActionException
    */
   protected function layDownPlayersCards(mixed $player): void {
     $contract = $player->contractSatisfied();
+    if(empty($contract)) {
+      throw new IllegalActionException('No contract satisfied.');
+    }
     $player->layedDownThrees = collect($contract['threes'])->flatten()->toArray();
     $player->layedDownFours = collect($contract['fours'])->flatten()->toArray();
     // remove laid down cards from hand

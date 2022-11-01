@@ -373,6 +373,26 @@ it('allows a player to lay down cards', function () {
     $player1 = $game->players[0];
     $player1->layDownCards();
     expect($player1->hand->cards)->toHaveCount(2)
-      ->and($player1->layedDownThrees)->toHaveCount(6)
-      ->and($player1->layedDownFours)->toHaveCount(4);
+      ->and($player1->laidDownThrees)->toHaveCount(6)
+      ->and($player1->laidDownFours)->toHaveCount(4);
+});
+
+it('it does not allow a player to lay down cards if the contract is not satisfied', function () {
+ $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'K♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => ['7♠', '7♥'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+    $player1 = $game->players[0];
+    expect(function () use ($player1) {
+        $player1->layDownCards();
+    })->toThrow(IllegalActionException::class)
+      ->and($player1->hand->cards)->toHaveCount(12)
+      ->and($player1->laidDownThrees)->toHaveCount(0)
+      ->and($player1->laidDownFours)->toHaveCount(0);
 });
