@@ -2,15 +2,33 @@
 
 namespace App\Models;
 
-use App\Events\PlayerRequestsCardFromStock;
+use App\Events\PlayerDiscardCardFromHand;
+use App\Events\PlayerLayDownCards;
+use App\Events\PlayerRequestsCardFromDiscardPile;
+use App\Events\PlayerRequestsCardFromStockPile;
+use App\Exceptions\IllegalActionException;
+use App\Facades\GameCache;
+use Illuminate\Support\Str;
 
 class Kalooki {
 
+  protected string $id;
+
   public function __construct(
+    ?string $id = null,
     public array $players = [], public bool $started = FALSE,
     public array $deck = [], public array $discard = [], public array $stock = [],
   ) {
     $this->deck = count($deck) === 0 ? $this->createDeck() : $deck;
+    $this->id  = $id ?: (string) Str::orderedUuid();
+    GameCache::cacheGame($this);
+  }
+
+  /**
+   * @return string
+   */
+  public function id(): string {
+    return $this->id;
   }
 
   public function addPlayer(Player $player): void {
@@ -72,11 +90,69 @@ class Kalooki {
     );
   }
 
-  public function playerRequestsCardFromStock(PlayerRequestsCardFromStock $event): void {
-    $player = $event->player;
-    $game = $event->game;
+  public function playerRequestsCardFromStockPile(PlayerRequestsCardFromStockPile $event): void {
+    $gameData = GameCache::getGameState($event->playerId);
+    $game = $gameData['game'];
+    $player = $gameData['player'];
     $card = array_pop($game->stock);
     $player->hand->cards[] = $card;
+    GameCache::cacheGame($game);
+  }
+
+  /**
+   * @throws \App\Exceptions\IllegalActionException
+   */
+  public function playerRequestsCardFromDiscardPile(PlayerRequestsCardFromDiscardPile $event): void {
+    $gameData = GameCache::getGameState($event->playerId);
+    $game = $gameData['game'];
+    $player = $gameData['player'];
+    $card = array_pop($game->discard);
+    if(!$card) {
+      throw new IllegalActionException('No card in discard pile.');
+    }
+    $player->hand->cards[] = $card;
+    GameCache::cacheGame($game);
+  }
+
+  /**
+   * @param  \App\Events\PlayerDiscardCardFromHand  $event
+   *
+   * @return void
+   * @throws \App\Exceptions\IllegalActionException
+   */
+  public function playerDiscardCardFromHand(PlayerDiscardCardFromHand $event): void {
+    $gameData = GameCache::getGameState($event->playerId);
+    $game = $gameData['game'];
+    $player = $gameData['player'];
+    $card = $player->hand->removeCard($event->cardId);
+    if(!$card) {
+      throw new IllegalActionException('Card not in players hand.');
+    }
+    $game->discard[] = $card;
+    GameCache::cacheGame($game);
+  }
+
+  public function playerLayDownCards(PlayerLayDownCards $event): void {
+    $gameData = GameCache::getGameState($event->playerId);
+    $game = $gameData['game'];
+    $player = $gameData['player'];
+    $this->layDownPlayersCards($player);
+    GameCache::cacheGame($game);
+  }
+
+  /**
+   * @param  mixed  $player
+   *
+   * @return void
+   */
+  protected function layDownPlayersCards(mixed $player): void {
+    $contract = $player->contractSatisfied();
+    $player->layedDownThrees = collect($contract['threes'])->flatten()->toArray();
+    $player->layedDownFours = collect($contract['fours'])->flatten()->toArray();
+    // remove laid down cards from hand
+    $player->hand->cards = collect($player->hand->cards)
+      ->filter(fn($card) => !in_array($card, $player->layedDownThrees) && !in_array($card, $player->layedDownFours))
+      ->values()->toArray();
   }
 
 }

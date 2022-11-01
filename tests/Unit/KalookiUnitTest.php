@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\IllegalActionException;
 use App\Models\Card;
 use App\Models\Kalooki;
 use App\Models\Player;
@@ -198,6 +199,46 @@ it('does not add ineligible cards if applicable', function () {
       ->and($unusedCards)->toHaveCount(2);
 });
 
+it('has an id for game and players when created', function () {
+ $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => ['7♠'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+ $player = $game->players[0];
+     expect($game->id())->toBeString()->and($player->id)->toBeString();
+});
+
+it('caches game and player state when game is created', function () {
+  $game = Kalooki::fake([
+        'players' => [
+          Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+          Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+        ],
+        'discard' => ['7♠'],
+        'stock' => [
+          '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+          '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+        ],
+      ]);
+  $player1 = $game->players[0];
+  $player2 = $game->players[1];
+  $gameId = $game->id();
+  $player1Id = $game->players[0]->id;
+  $player2Id = $game->players[1]->id;
+  $gameFromCache =  \Illuminate\Support\Facades\Cache::get($gameId);
+  $player1FromCache = \Illuminate\Support\Facades\Cache::get($player1Id)['player'];
+  $player2FromCache = \Illuminate\Support\Facades\Cache::get($player2Id)['player'];
+  expect($gameFromCache)->toBe($game)
+    ->and($player1FromCache)->toBe($player1)
+    ->and($player2FromCache)->toBe($player2);
+});
+
 it('allows a player to draw from the stock pile of cards', function () {
   $game = Kalooki::fake([
       'players' => [
@@ -212,7 +253,126 @@ it('allows a player to draw from the stock pile of cards', function () {
     $player1 = $game->players[0];
     expect($player1->hand->cards)->toHaveCount(12)
       ->and($game->stock)->toHaveCount(27);
-    $player1->drawFromStock($game);
+    $player1->drawFromStockPile();
     expect($player1->hand->cards)->toHaveCount(13)
       ->and($game->stock)->toHaveCount(26);
+});
+it('allows a player to discard a card from hand', function () {
+
+  $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+    ],
+    'discard' => ['7♠'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+    ],
+  ]);
+  $player1 = $game->players[0];
+  $card  = $player1->hand->cards[0]; // A♠
+  expect($player1->hand->cards)->toHaveCount(12)
+    ->and($game->discard)->toHaveCount(1);
+  $player1->discard($card);
+  expect($player1->hand->cards)->toHaveCount(11)
+    ->and($game->discard)->toHaveCount(2);
+});
+
+it('does not allows a player to discard a card not currently in hand', function () {
+
+  $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+    ],
+    'discard' => ['7♠'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+    ],
+  ]);
+  $player1 = $game->players[0];
+  $card  = $game->stock[0]; // 7♥
+  expect($player1->hand->cards)->toHaveCount(12)
+    ->and($game->discard)->toHaveCount(1)
+    ->and(function () use ($player1, $card) {
+      $player1->discard($card);
+    })->toThrow(IllegalActionException::class);
+});
+
+it('allows a player to draw a card from the discard pile', function () {
+ $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => ['7♠', '7♥'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+    $player1 = $game->players[0];
+    expect($player1->hand->cards)->toHaveCount(12)
+      ->and($game->discard)->toHaveCount(2);
+    $player1->drawFromDiscardPile();
+    expect($player1->hand->cards)->toHaveCount(13)
+      ->and($game->discard)->toHaveCount(1);
+});
+
+it('does not allow a player to draw a card from discard pile if the pile is empty', function () {
+ $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => [],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+    $player1 = $game->players[0];
+    expect($player1->hand->cards)->toHaveCount(12)
+      ->and($game->discard)->toHaveCount(0)
+      ->and(function () use ($player1) {
+        $player1->drawFromDiscardPile();
+      })->toThrow(IllegalActionException::class)
+      ->and($player1->hand->cards)->toHaveCount(12)
+      ->and($game->discard)->toHaveCount(0);
+});
+it('adds card to the top of the discard pile and removes it when player draws from it', function () {
+ $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => ['7♠', '7♥'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+    $player1 = $game->players[0];
+    $card1 = $game->discard[0];
+    $card2 = $game->discard[1];
+    $player1->drawFromDiscardPile();
+    expect($player1->hand->cards)->toHaveCount(13)
+      ->and($game->discard)->toHaveCount(1)
+      ->and($game->discard[0])->toBe($card1)
+    ->and($player1->hand->cards)->toContain($card2);
+});
+
+it('allows a player to lay down cards', function () {
+ $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => ['7♠', '7♥'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+    $player1 = $game->players[0];
+    $player1->layDownCards();
+    expect($player1->hand->cards)->toHaveCount(2)
+      ->and($player1->layedDownThrees)->toHaveCount(6)
+      ->and($player1->layedDownFours)->toHaveCount(4);
 });

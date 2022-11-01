@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Suit;
+use App\Exceptions\IllegalActionException;
 
 class Hand {
 
@@ -174,7 +175,8 @@ class Hand {
         if ($key !== count($foursSorted) - 1) {
           $sequence = [$card];
         }
-      } else {
+      }
+      else {
         $sequence[] = $card;
       }
     }
@@ -244,8 +246,7 @@ class Hand {
    * @return array
    */
   protected static function findSuitsThatContainFourOrMoreCards(array $cards): array {
-    $countOfCardsPerSuit
-      = array_count_values(array_map(fn($card) => $card->suit->value(), $cards));
+    $countOfCardsPerSuit = array_count_values(array_map(fn($card) => $card->suit->value(), $cards));
     // Filter out suits that are not four or more
     return array_filter($countOfCardsPerSuit, fn($count) => $count >= 4);
   }
@@ -289,12 +290,21 @@ class Hand {
 
   public static function canAddCardToFours(array $sequence, card $card): int {
     // can card be added to the end of the sequence
-    if ($card->rank->value() === $sequence[count($sequence) - 1]->rank->value()
-      + 1
-    ) {
+    if ($card->rank->value() === $sequence[count($sequence) - 1]->rank->value() + 1) {
       return count($sequence);
     }
     return -1;
+  }
+
+  public function removeCard(string $cardId): ?Card {
+    $key = array_search($cardId, array_map(fn($card) => $card->id, $this->cards));
+    if($key === FALSE) {
+      return NULL;
+    }
+    $card = $this->cards[$key];
+    unset($this->cards[$key]);
+    $this->cards = array_values($this->cards); // reindex array
+    return $card;
   }
 
 }

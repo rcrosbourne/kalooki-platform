@@ -3,14 +3,18 @@
 namespace App\Models;
 
 
-use App\Events\ListUpdate;
-use App\Events\PlayerRequestsCardFromStock;
-use Illuminate\Auth\Events\Registered;
+use App\Events\PlayerDiscardCardFromHand;
+use App\Events\PlayerLayDownCards;
+use App\Events\PlayerRequestsCardFromDiscardPile;
+use App\Events\PlayerRequestsCardFromStockPile;
+use Illuminate\Support\Str;
 
 class Player {
 
-  public function __construct(public string $name, public ?Hand $hand = NULL) {
+  public function __construct(public string $name, public ?Hand $hand = NULL, public ?string $id = NULL,
+    public array $layedDownThrees = [], public array $layedDownFours = []) {
     $this->hand = $hand ?: new Hand([]);
+    $this->id = $id ?: (string) Str::orderedUuid();
   }
 
   /**
@@ -20,16 +24,26 @@ class Player {
    * @throws \Exception
    */
   public static function fake(array $data = []): Player {
-    $hand
-      = new Hand(array_map(fn($cardString) => Card::fromString($cardString), $data['hand']));
+    $hand = new Hand(array_map(fn($cardString) => Card::fromString($cardString), $data['hand']));
     return new Player(
       name: $data['name'] ?? 'Player',
       hand: $hand,
     );
   }
 
-  public function drawFromStock(Kalooki &$game): void {
-    event(new PlayerRequestsCardFromStock($this, $game));
+  public function drawFromStockPile(): void {
+    event(new PlayerRequestsCardFromStockPile($this->id));
+  }
+  public function drawFromDiscardPile(): void {
+    event(new PlayerRequestsCardFromDiscardPile($this->id));
+  }
+
+  public function discard(Card $card): void {
+    event(new PlayerDiscardCardFromHand($this->id, $card->id));
+  }
+
+  public function layDownCards(): void {
+    event(new PlayerLayDownCards($this->id));
   }
 
   /**
@@ -79,14 +93,14 @@ class Player {
         // If we can add a card to the sequence, we do so.
         if (Hand::canAddCardToFours($sequence, $leftOverCards[$numberOfIterations]) !== -1) {
           // If we can add a card to front of the sequence we do so.
-            $sequence[] = $leftOverCards[$numberOfIterations];
-            unset($leftOverCards[$numberOfIterations]);
+          $sequence[] = $leftOverCards[$numberOfIterations];
+          unset($leftOverCards[$numberOfIterations]);
         }
         $numberOfIterations++;
       }
       $solution['fours'] = $sequence;
       $solution['threes'] = $threes;
-//      return $solution;
+      //      return $solution;
     }
     return $solution;
   }

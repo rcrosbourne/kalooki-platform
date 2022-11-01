@@ -209,7 +209,8 @@ return [
     */
 
     'aliases' => Facade::defaultAliases()->merge([
-        // 'ExampleClass' => App\Example\ExampleClass::class,
+      // 'ExampleClass' => App\Example\ExampleClass::class,
+      'GameCache' => \App\Facades\GameCache::class,
     ])->toArray(),
 
 ];
