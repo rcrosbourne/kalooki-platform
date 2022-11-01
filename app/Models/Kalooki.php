@@ -98,6 +98,8 @@ class Kalooki {
     $player = $gameData['player'];
     $card = array_pop($game->stock);
     $player->hand->cards[] = $card;
+    $player->actionsTaken[] = PlayerActions::requestCardFromStockPile;
+    $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
   }
 
@@ -113,6 +115,8 @@ class Kalooki {
       throw new IllegalActionException('No card in discard pile.');
     }
     $player->hand->cards[] = $card;
+    $player->actionsTaken[] = PlayerActions::requestCardFromDiscardPile;
+    $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
   }
 
@@ -131,6 +135,8 @@ class Kalooki {
       throw new IllegalActionException('Card not in players hand.');
     }
     $game->discard[] = $card;
+    $player->actionsTaken[] = PlayerActions::discardCardFromHand;
+    $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
   }
 
@@ -142,6 +148,8 @@ class Kalooki {
     $game = $gameData['game'];
     $player = $gameData['player'];
     $this->layDownPlayersCards($player);
+    $player->actionsTaken[] = PlayerActions::layDownCards;
+    $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
   }
 
@@ -182,23 +190,54 @@ class Kalooki {
   }
 
   private function getAvailableActions(Player $player, Kalooki $game): array {
+    // if a player hand is empty they already won.
+    if(empty($player->hand->cards)) {
+      $player->isWinner = TRUE;
+      return [];
+    }
     $actions = [];
-    // if a player has their contract satisfied, they can lay down their cards.
-    if (!empty($player->contractSatisfied())) {
-      $actions[] = PlayerActions::layDownCards;
+    $actionsAlreadyTaken = $player->actionsTaken;
+    // If no actions have been taken, player can request card from stock or discard.
+    if(empty($actionsAlreadyTaken)) {
+      if(!empty($game->stock)) {
+        $actions[] = PlayerActions::requestCardFromStockPile;
+      }
+      if(!empty($game->discard)) {
+        $actions[] = PlayerActions::requestCardFromDiscardPile;
+      }
+      return $actions;
     }
-    // if there are cards in the discard pile, a player can request a card from it.
-    if (!empty($game->discard)) {
-      $actions[] = PlayerActions::requestCardFromDiscardPile;
+    // If player has requested a card from the stockpile or the can discard pile a card
+    // then ...
+    if(in_array(PlayerActions::requestCardFromDiscardPile, $actionsAlreadyTaken) ||
+      in_array(PlayerActions::requestCardFromStockPile, $actionsAlreadyTaken)) {
+      // If the contract is satisfied, the player can lay down the cards.
+      if(!empty($player->contractSatisfied()) && !in_array(PlayerActions::layDownCards, $actionsAlreadyTaken)) {
+        $actions[] = PlayerActions::layDownCards;
+      }
+      // If the player has not discarded a card, and they have already requested a card
+      // They can discard a card.
+      if(!in_array(PlayerActions::discardCardFromHand, $actionsAlreadyTaken) &&
+        (in_array(PlayerActions::requestCardFromDiscardPile, $actionsAlreadyTaken) ||
+          in_array(PlayerActions::requestCardFromStockPile, $actionsAlreadyTaken))) {
+        $actions[] = PlayerActions::discardCardFromHand;
+      }
     }
-    // if there are cards in the stockpile, a player can request a card from it.
-    if (!empty($game->stock)) {
-      $actions[] = PlayerActions::requestCardFromStockPile;
-    }
-    // if a player has cards in their hand, they can discard a card.
-    if (!empty($player->hand->cards)) {
-      $actions[] = PlayerActions::discardCardFromHand;
-    }
+//    if (!empty($player->contractSatisfied())) {
+//      $actions[] = PlayerActions::layDownCards;
+//    }
+//    // if there are cards in the discard pile, a player can request a card from it.
+//    if (!empty($game->discard)) {
+//      $actions[] = PlayerActions::requestCardFromDiscardPile;
+//    }
+//    // if there are cards in the stockpile, a player can request a card from it.
+//    if (!empty($game->stock)) {
+//      $actions[] = PlayerActions::requestCardFromStockPile;
+//    }
+//    // if a player has cards in their hand, they can discard a card.
+//    if (!empty($player->hand->cards)) {
+//      $actions[] = PlayerActions::discardCardFromHand;
+//    }
     return $actions;
   }
 

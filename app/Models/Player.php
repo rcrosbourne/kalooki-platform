@@ -18,6 +18,7 @@ class Player {
     public array $laidDownThrees = [],
     public array $laidDownFours = [], public bool $isTurn = FALSE, public array $availableActions = [],
     public array $actionsTaken = [],
+    public bool $isWinner = FALSE,
   ) {
     $this->hand = $hand ?: new Hand([]);
     $this->id = $id ?: (string) Str::orderedUuid();
@@ -97,7 +98,7 @@ class Player {
       // Attempt to tack on leftover cards
       // use array values to reset indexes
       $leftOverCards
-        = array_values(array_diff($cards, $sequence, collect($threes)->flatten()->toArray()));
+        = Hand::sortBySuitThenRank(array_values(array_diff($cards, $sequence, collect($threes)->flatten()->toArray())));
       // If we have leftover cards, see if we can add them to the sequence.
       $numberOfLeftOverCards = count($leftOverCards);
       $numberOfIterations = 0;

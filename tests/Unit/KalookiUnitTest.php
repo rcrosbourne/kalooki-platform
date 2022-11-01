@@ -451,9 +451,9 @@ it('determines a player\'s available actions in a given turn if contract satisfi
   ]);
   $player1 = $game->players[0];
   $game->setTurn($player1->id);
-  expect($player1->availableActions())->toHaveCount(4)
-    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::discardCardFromHand)
-    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::layDownCards)
+  expect($player1->availableActions())->toHaveCount(2)
+    ->and($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::discardCardFromHand)
+    ->and($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::layDownCards)
     ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::requestCardFromDiscardPile)
     ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::requestCardFromStockPile);
 });
@@ -471,9 +471,85 @@ it('determines a player\'s available actions in a given turn if contract not sat
     ]);
  $player1 = $game->players[0];
  $game->setTurn($player1->id);
-  expect($player1->availableActions())->toHaveCount(3)
+ $player1->drawFromStockPile();
+  expect($player1->availableActions())->toHaveCount(1)
     ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::discardCardFromHand)
     ->and($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::layDownCards)
+    ->and($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::requestCardFromDiscardPile)
+    ->and($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::requestCardFromStockPile);
+});
+
+it('determines a player\'s available actions in a given turn if discard pile is empty', function () {
+ $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', '10♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => [],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+ $player1 = $game->players[0];
+ $game->setTurn($player1->id);
+  expect($player1->availableActions())->toHaveCount(1)
+    ->and($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::discardCardFromHand)
+    ->and($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::layDownCards)
+    ->and($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::requestCardFromDiscardPile)
+    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::requestCardFromStockPile);
+});
+
+it('reevaluates a player\'s available actions in a given turn based on the actions they have already taken', function () {
+ $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => ['7♠', '7♥'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+ /** @var Player $player1 */
+ $player1 = $game->players[0];
+ $game->setTurn($player1->id);
+  expect($player1->availableActions())->toHaveCount(2)
     ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::requestCardFromDiscardPile)
     ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::requestCardFromStockPile);
+  $player1->drawFromStockPile();
+  expect($player1->availableActions())->toHaveCount(2)
+    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::discardCardFromHand)
+    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::layDownCards);
+  $player1->layDownCards();
+  expect($player1->availableActions())->toHaveCount(1)
+    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::discardCardFromHand);
+  $player1->discardFromHand($player1->hand->cards[0]);
+  expect($player1->availableActions())->toHaveCount(0);
+});
+
+it('reevaluates a player\'s available actions in a given turn if the player does a winning action', function () {
+ $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => ['7♠', '7♥', '7♣'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+ /** @var Player $player1 */
+ $player1 = $game->players[0];
+ $game->setTurn($player1->id);
+  expect($player1->availableActions())->toHaveCount(2)
+    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::requestCardFromDiscardPile)
+    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::requestCardFromStockPile);
+  $player1->drawFromDiscardPile();
+  expect($player1->availableActions())->toHaveCount(2)
+    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::discardCardFromHand)
+    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::layDownCards);
+  $player1->layDownCards();
+  // Winner
+  expect($player1->availableActions())->toHaveCount(0)
+    ->and($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::discardCardFromHand);
 });
