@@ -6,7 +6,9 @@ use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerLayDownCards;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
+use App\Events\PlayerTurnNotification;
 use App\Models\Kalooki;
+use App\Models\Player;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -32,6 +34,9 @@ class EventServiceProvider extends ServiceProvider {
       ],
       PlayerLayDownCards::class                => [
         Kalooki::class . '@playerLayDownCards',
+      ],
+      PlayerTurnNotification::class                => [
+        Player::class . '@onPlayerTurnNotification',
       ],
       PlayerDiscardCardFromHand::class         => [
         Kalooki::class . '@playerDiscardCardFromHand',

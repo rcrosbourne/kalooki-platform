@@ -7,14 +7,21 @@ use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerLayDownCards;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
+use App\Events\PlayerTurnNotification;
 use Illuminate\Support\Str;
 
 class Player {
 
-  public function __construct(public string $name, public ?Hand $hand = NULL, public ?string $id = NULL,
-    public array $laidDownThrees = [], public array $laidDownFours = []) {
+
+  public function __construct(
+    public string $name = "", public ?Hand $hand = NULL, public ?string $id = NULL,
+    public array $laidDownThrees = [],
+    public array $laidDownFours = [], public bool $isTurn = FALSE, public array $availableActions = [],
+    public array $actionsTaken = [],
+  ) {
     $this->hand = $hand ?: new Hand([]);
     $this->id = $id ?: (string) Str::orderedUuid();
+    $this->name = $name ?: 'Player ' . $this->id;
   }
 
   /**
@@ -34,16 +41,25 @@ class Player {
   public function drawFromStockPile(): void {
     event(new PlayerRequestsCardFromStockPile($this->id));
   }
+
   public function drawFromDiscardPile(): void {
     event(new PlayerRequestsCardFromDiscardPile($this->id));
   }
 
-  public function discard(Card $card): void {
+  public function discardFromHand(Card $card): void {
     event(new PlayerDiscardCardFromHand($this->id, $card->id));
   }
 
   public function layDownCards(): void {
     event(new PlayerLayDownCards($this->id));
+  }
+
+  public function availableActions(): array {
+    return $this->availableActions;
+  }
+
+  public function onPlayerTurnNotification(PlayerTurnNotification $event): void {
+//    $this->isTurn = $event->playerId === $this->id;
   }
 
   /**

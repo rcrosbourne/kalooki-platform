@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\PlayerActions;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerLayDownCards;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
+use App\Events\PlayerTurnNotification;
 use App\Exceptions\IllegalActionException;
 use App\Facades\GameCache;
 use Illuminate\Support\Str;
@@ -15,12 +17,12 @@ class Kalooki {
   protected string $id;
 
   public function __construct(
-    ?string $id = null,
+    ?string $id = NULL,
     public array $players = [], public bool $started = FALSE,
     public array $deck = [], public array $discard = [], public array $stock = [],
   ) {
     $this->deck = count($deck) === 0 ? $this->createDeck() : $deck;
-    $this->id  = $id ?: (string) Str::orderedUuid();
+    $this->id = $id ?: (string) Str::orderedUuid();
     GameCache::cacheGame($this);
   }
 
@@ -107,7 +109,7 @@ class Kalooki {
     $game = $gameData['game'];
     $player = $gameData['player'];
     $card = array_pop($game->discard);
-    if(!$card) {
+    if (!$card) {
       throw new IllegalActionException('No card in discard pile.');
     }
     $player->hand->cards[] = $card;
@@ -125,7 +127,7 @@ class Kalooki {
     $game = $gameData['game'];
     $player = $gameData['player'];
     $card = $player->hand->removeCard($event->cardId);
-    if(!$card) {
+    if (!$card) {
       throw new IllegalActionException('Card not in players hand.');
     }
     $game->discard[] = $card;
@@ -143,6 +145,23 @@ class Kalooki {
     GameCache::cacheGame($game);
   }
 
+  public function setTurn(string $playerId): void {
+    $gameData = GameCache::getGameState($playerId);
+    $game = $gameData['game'];
+    $player = $gameData['player'];
+    $player->isTurn = TRUE;
+    // set other players turn to false.
+    foreach ($game->players as $otherPlayer) {
+      if ($otherPlayer->id !== $player->id) {
+        $otherPlayer->isTurn = FALSE;
+      }
+    }
+    // set player available actions, based on their hand.
+    $player->availableActions = $this->getAvailableActions($player, $game);
+    event(new PlayerTurnNotification($player->id));
+    GameCache::cacheGame($game);
+  }
+
   /**
    * @param  mixed  $player
    *
@@ -151,7 +170,7 @@ class Kalooki {
    */
   protected function layDownPlayersCards(mixed $player): void {
     $contract = $player->contractSatisfied();
-    if(empty($contract)) {
+    if (empty($contract)) {
       throw new IllegalActionException('No contract satisfied.');
     }
     $player->laidDownThrees = collect($contract['threes'])->flatten()->toArray();
@@ -160,6 +179,27 @@ class Kalooki {
     $player->hand->cards = collect($player->hand->cards)
       ->filter(fn($card) => !in_array($card, $player->laidDownThrees) && !in_array($card, $player->laidDownFours))
       ->values()->toArray();
+  }
+
+  private function getAvailableActions(Player $player, Kalooki $game): array {
+    $actions = [];
+    // if a player has their contract satisfied, they can lay down their cards.
+    if (!empty($player->contractSatisfied())) {
+      $actions[] = PlayerActions::layDownCards;
+    }
+    // if there are cards in the discard pile, a player can request a card from it.
+    if (!empty($game->discard)) {
+      $actions[] = PlayerActions::requestCardFromDiscardPile;
+    }
+    // if there are cards in the stockpile, a player can request a card from it.
+    if (!empty($game->stock)) {
+      $actions[] = PlayerActions::requestCardFromStockPile;
+    }
+    // if a player has cards in their hand, they can discard a card.
+    if (!empty($player->hand->cards)) {
+      $actions[] = PlayerActions::discardCardFromHand;
+    }
+    return $actions;
   }
 
 }
