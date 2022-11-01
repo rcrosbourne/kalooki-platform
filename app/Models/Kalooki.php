@@ -132,6 +132,9 @@ class Kalooki {
     GameCache::cacheGame($game);
   }
 
+  /**
+   * @throws \App\Exceptions\IllegalActionException
+   */
   public function playerLayDownCards(PlayerLayDownCards $event): void {
     $gameData = GameCache::getGameState($event->playerId);
     $game = $gameData['game'];
@@ -151,11 +154,11 @@ class Kalooki {
     if(empty($contract)) {
       throw new IllegalActionException('No contract satisfied.');
     }
-    $player->layedDownThrees = collect($contract['threes'])->flatten()->toArray();
-    $player->layedDownFours = collect($contract['fours'])->flatten()->toArray();
+    $player->laidDownThrees = collect($contract['threes'])->flatten()->toArray();
+    $player->laidDownFours = collect($contract['fours'])->flatten()->toArray();
     // remove laid down cards from hand
     $player->hand->cards = collect($player->hand->cards)
-      ->filter(fn($card) => !in_array($card, $player->layedDownThrees) && !in_array($card, $player->layedDownFours))
+      ->filter(fn($card) => !in_array($card, $player->laidDownThrees) && !in_array($card, $player->laidDownFours))
       ->values()->toArray();
   }
 
