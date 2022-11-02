@@ -273,10 +273,11 @@ it('allows a player to discard a card from hand', function () {
   $player1 = $game->players[0];
   /** @var \App\Models\Card $card */
   $card  = $player1->hand->cards[0]; // A♠
-  expect($player1->hand->cards)->toHaveCount(12)
+  $player1->drawFromStockPile();
+  expect($player1->hand->cards)->toHaveCount(13)
     ->and($game->discard)->toHaveCount(1);
   $player1->discardFromHand($card);
-  expect($player1->hand->cards)->toHaveCount(11)
+  expect($player1->hand->cards)->toHaveCount(12)
     ->and($game->discard)->toHaveCount(2);
 });
 
@@ -372,9 +373,11 @@ it('allows a player to lay down cards', function () {
         '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
       ],
     ]);
+    /** @var Player $player1 */
     $player1 = $game->players[0];
+    $player1->drawFromStockPile();
     $player1->layDownCards();
-    expect($player1->hand->cards)->toHaveCount(2)
+    expect($player1->hand->cards)->toHaveCount(3)
       ->and($player1->laidDownThrees)->toHaveCount(6)
       ->and($player1->laidDownFours)->toHaveCount(4);
 });
@@ -584,7 +587,7 @@ it('reevaluates a player\'s available actions in a given turn if the laid out ca
 it('throws an exception if a player does an action that is not available', function () {
  $game = Kalooki::fake([
       'players' => [
-        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', 'A♣', '10♣']]),
       ],
       'discard' => ['7♠', '7♥', '7♣'],
       'stock' => [
@@ -600,5 +603,17 @@ it('throws an exception if a player does an action that is not available', funct
   })->toThrow(\App\Exceptions\IllegalActionException::class)
     ->and(function () use ($player1) {
       $player1->endTurn();
+    })->toThrow(\App\Exceptions\IllegalActionException::class)
+    ->and(function () use ($player1) {
+      $player1->discardFromHand($player1->hand->cards[0]);
     })->toThrow(\App\Exceptions\IllegalActionException::class);
+  // Draw from card
+  $player1->drawFromDiscardPile();
+  expect(function () use ($player1) {
+    $player1->layDownCards();
+  })->toThrow(\App\Exceptions\IllegalActionException::class)
+  ->and(function () use ($player1) {
+    $player1->endTurn();
+  })->toThrow(\App\Exceptions\IllegalActionException::class);
+
 });

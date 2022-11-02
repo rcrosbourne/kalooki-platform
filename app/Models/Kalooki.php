@@ -131,6 +131,9 @@ class Kalooki {
     $gameData = GameCache::getGameState($event->playerId);
     $game = $gameData['game'];
     $player = $gameData['player'];
+    if (!in_array(PlayerActions::discardCardFromHand, $player->availableActions)) {
+      throw new IllegalActionException('Player cannot discard card from hand.');
+    }
     $card = $player->hand->removeCard($event->cardId);
     if (!$card) {
       throw new IllegalActionException('Card not in players hand.');
@@ -148,12 +151,12 @@ class Kalooki {
     $gameData = GameCache::getGameState($event->playerId);
     $game = $gameData['game'];
     $player = $gameData['player'];
-    $player->availableActions = $this->getAvailableActions($player, $game);
     if(!in_array(PlayerActions::layDownCards, $player->availableActions)) {
       throw new IllegalActionException('Player cannot lay down cards.');
     }
     $this->layDownPlayersCards($player);
     $player->actionsTaken[] = PlayerActions::layDownCards;
+    $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
   }
 
@@ -165,8 +168,7 @@ class Kalooki {
     $game = $gameData['game'];
     /** @var \App\Models\Player $player */
     $player = $gameData['player'];
-    $availableActions = $this->getAvailableActions($player, $game);
-    if(!in_array(PlayerActions::endTurn, $availableActions)) {
+    if(!in_array(PlayerActions::endTurn, $player->availableActions)) {
       throw new IllegalActionException('Player cannot end turn.');
     }
     $player->availableActions = [];
