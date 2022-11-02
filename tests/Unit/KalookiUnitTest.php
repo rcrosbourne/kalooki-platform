@@ -648,5 +648,25 @@ it('detects the next player\'s turn', function () {
   $player2->endTurn();
   expect($player1->isTurn)->toBeTrue()
     ->and($player2->isTurn)->toBeFalse();
+});
 
+it('detects when a player has won', function () {
+ $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+    ],
+    'discard' => ['7♠', '7♥', '7♣'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+    ],
+  ]);
+  /** @var Player $player1 */
+  $player1 = $game->players[0];
+  // simulating laying down cards on the previous turn
+  $game->setTurn($player1->id);
+  $player1->drawFromDiscardPile();
+  $player1->layDownCards();
+  $player1->endTurn();
+  expect($player1->isWinner)->toBeTrue();
 });

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PlayerActions;
+use App\Events\GameOver;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerEndsTurnNotification;
 use App\Events\PlayerLayDownCards;
@@ -16,6 +17,7 @@ use Illuminate\Support\Str;
 class Kalooki {
 
   protected string $id;
+  protected ?Player $winner;
 
   public function __construct(
     ?string $id = NULL,
@@ -24,6 +26,7 @@ class Kalooki {
   ) {
     $this->deck = count($deck) === 0 ? $this->createDeck() : $deck;
     $this->id = $id ?: (string) Str::orderedUuid();
+    $this->winner = NULL;
     GameCache::cacheGame($this);
   }
 
@@ -61,7 +64,7 @@ class Kalooki {
     }
     // Add 1 card to the discard pile.
     $this->discard[] = array_pop($this->deck);
-    // Add the rest of the cards to the stock pile.
+    // Add the rest of the cards to the stockpile.
     $this->stock = $this->deck;
   }
 
@@ -174,9 +177,17 @@ class Kalooki {
     $player->availableActions = [];
     $player->actionsTaken = [];
     $player->isTurn = FALSE;
-    // Notify the next player that it is their turn.
-    $nextPlayer = $this->getNextPlayer($player, $game);
-    $this->setTurn($nextPlayer->id);
+    // If the player has not won advance to the next player.
+    if($player->isWinner === TRUE) {
+      $game->winner = $player;
+      // send a game over event.
+      broadcast(new GameOver($player->name));
+    }
+    else {
+      // Notify the next player that it is their turn.
+      $nextPlayer = $this->getNextPlayer($player, $game);
+      $this->setTurn($nextPlayer->id);
+    }
     GameCache::cacheGame($game);
   }
 
@@ -220,7 +231,7 @@ class Kalooki {
     // if a player hand is empty they already won.
     if(empty($player->hand->cards)) {
       $player->isWinner = TRUE;
-      return [];
+      return [PlayerActions::endTurn];
     }
     $actions = [];
     $actionsAlreadyTaken = $player->actionsTaken;
