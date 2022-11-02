@@ -617,3 +617,31 @@ it('throws an exception if a player does an action that is not available', funct
   })->toThrow(\App\Exceptions\IllegalActionException::class);
 
 });
+
+it('detects the next player\'s turn', function () {
+ $game = Kalooki::fake([
+      'players' => [
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', 'A♣', '10♣']]),
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', 'A♣', '10♣']]),
+      ],
+      'discard' => ['7♠', '7♥', '7♣'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
+    ]);
+  /** @var Player $player1 */
+  $player1 = $game->players[0];
+  /** @var Player $player2 */
+  $player2 = $game->players[1];
+  $game->setTurn($player1->id);
+  expect($player1->isTurn)->toBeTrue()
+    ->and($player2->isTurn)->toBeFalse();
+
+  $player1->drawFromStockPile();
+  $player1->discardFromHand($player1->hand->cards[0]);
+  $player1->endTurn();
+  expect($player1->isTurn)->toBeFalse()
+    ->and($player2->isTurn)->toBeTrue();
+
+});
