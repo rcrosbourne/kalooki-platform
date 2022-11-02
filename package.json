@@ -28,6 +28,7 @@
     },
     "dependencies": {
         "@emotion/react": "^11.10.4",
+        "@heroicons/react": "^2.0.12",
         "@mantine/core": "^5.5.0",
         "@mantine/hooks": "^5.5.0",
         "@mantine/notifications": "^5.5.0",

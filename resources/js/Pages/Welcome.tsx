@@ -88,7 +88,6 @@ const useStyles = createStyles((theme) => ({
         height: 70,
     },
 
-
     itemDragging: {
         boxShadow: theme.shadows.sm,
         border: `1px solid ${theme.colors.red[5]}`,
