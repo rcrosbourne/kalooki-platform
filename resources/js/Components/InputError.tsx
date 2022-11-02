@@ -5,5 +5,5 @@ interface Props {
     className?: string;
 }
 export default function InputError({ message, className = '' }: Props) {
-    return message ? <p className={'text-sm text-red-600 ' + className}>{message}</p> : null;
+    return message ? <p className={'text-sm text-light-pink font-bold ' + className}>{message}</p> : null;
 }

@@ -39,7 +39,7 @@ export default function Login({ status, canResetPassword }) {
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel forInput="email" value="Email" />
+                    <InputLabel forInput="email" value="Email" className="text-gray-50"/>
 
                     <TextInput
                         type="text"
@@ -55,7 +55,7 @@ export default function Login({ status, canResetPassword }) {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel forInput="password" value="Password" />
+                    <InputLabel forInput="password" value="Password" className="text-gray-50" />
 
                     <TextInput
                         type="password"
@@ -73,7 +73,7 @@ export default function Login({ status, canResetPassword }) {
                     <label className="flex items-center">
                         <Checkbox name="remember" value={data.remember} handleChange={onHandleChange} />
 
-                        <span className="ml-2 text-sm text-gray-600">Remember me</span>
+                        <span className="ml-2 text-sm text-gray-50">Remember me</span>
                     </label>
                 </div>
 
@@ -81,7 +81,7 @@ export default function Login({ status, canResetPassword }) {
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="underline text-sm text-gray-600 hover:text-gray-900"
+                            className="underline text-sm text-gray-50 hover:text-gray-200"
                         >
                             Forgot your password?
                         </Link>

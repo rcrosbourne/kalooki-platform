@@ -35,9 +35,9 @@ export default function Register() {
         <GuestLayout>
             <Head title="Register" />
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} className="">
                 <div>
-                    <InputLabel forInput="name" value="Name" />
+                    <InputLabel forInput="name" value="Name" className="text-gray-50" />
 
                     <TextInput
                         type="text"
@@ -54,7 +54,7 @@ export default function Register() {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel forInput="email" value="Email" />
+                    <InputLabel forInput="email" value="Email" className="text-gray-50"  />
 
                     <TextInput
                         type="email"
@@ -70,7 +70,7 @@ export default function Register() {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel forInput="password" value="Password" />
+                    <InputLabel forInput="password" value="Password" className="text-gray-50" />
 
                     <TextInput
                         type="password"
@@ -86,7 +86,7 @@ export default function Register() {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel forInput="password_confirmation" value="Confirm Password" />
+                    <InputLabel forInput="password_confirmation" value="Confirm Password" className="text-gray-50" />
 
                     <TextInput
                         type="password"
@@ -101,7 +101,7 @@ export default function Register() {
                 </div>
 
                 <div className="flex items-center justify-end mt-4">
-                    <Link href={route('login')} className="underline text-sm text-gray-600 hover:text-gray-900">
+                    <Link href={route('login')} className="underline text-sm text-gray-50 hover:text-gray-100">
                         Already registered?
                     </Link>
 

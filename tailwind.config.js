@@ -22,7 +22,8 @@ module.exports = {
         "dark-gray": "#D3DCE4",
         "light-blue": "#27577B",
         "light-brown": "#32373C",
-        "light-green": "#12B886"
+        "light-green": "#12B886",
+        "light-pink": "#FECACA"
       }
     }
   },

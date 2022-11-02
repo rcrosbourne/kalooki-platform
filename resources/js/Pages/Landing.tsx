@@ -5,6 +5,7 @@ import { Fragment } from "react";
 import { Popover, Transition } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
+import ApplicationLogo from "../Components/ApplicationLogo";
 
 const navigation = [
   { name: "How to Play", href: "#" },
@@ -26,11 +27,7 @@ export default function Landing(props) {
                 <div className="flex w-full items-center justify-between md:w-auto">
                   <a href="#">
                     <span className="sr-only">Your Company</span>
-                    <img
-                      className="h-12 w-auto sm:h-10"
-                      src="/img/IMG_3085.PNG"
-                      alt=""
-                    />
+                    <ApplicationLogo className="h-12 w-auto sm:h-10" />
                   </a>
                   <div className="-mr-2 flex items-center md:hidden">
                     <Popover.Button className="focus-ring-inset inline-flex items-center justify-center rounded-md bg-gray-900 p-2 text-gray-400 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-white">
@@ -74,11 +71,7 @@ export default function Landing(props) {
               <div className="overflow-hidden rounded-lg bg-white shadow-md ring-1 ring-black ring-opacity-5">
                 <div className="flex items-center justify-between px-5 pt-4">
                   <div>
-                    <img
-                      className="h-12 w-auto sm:h-10"
-                      src="/img/IMG_3085.PNG"
-                      alt=""
-                    />
+                    <ApplicationLogo className="h-12 w-auto sm:h-10" />
                   </div>
                   <div className="-mr-2">
                     <Popover.Button className="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-light-green">
@@ -154,7 +147,7 @@ export default function Landing(props) {
                     <img
                       className="w-full lg:absolute lg:inset-y-0 lg:left-0 lg:h-full lg:w-auto lg:max-w-none"
                       src="https://64.media.tumblr.com/458c2d5f32b57553e638087e433fe60e/0f74cb8fdfb80885-8e/s540x810/b1eba21ffbdfeccf4cd946f20204f7775bf714b8.jpg"
-                      alt="a set of 6 playing cards"
+                      alt="a set of 5 playing cards"
                     />
                   </div>
                 </div>
@@ -165,8 +158,6 @@ export default function Landing(props) {
           {/* More main page content here... */}
         </main>
       </div>
-
-
     </>
   );
 }

@@ -12,7 +12,7 @@ export default function Checkbox({ name, value, handleChange }: Props) {
             type="checkbox"
             name={name}
             value={value}
-            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            className="rounded border-gray-300 text-light-green shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50"
             onChange={(e) => handleChange(e)}
         />
     );
