@@ -4,6 +4,7 @@ namespace App\Models;
 
 
 use App\Events\PlayerDiscardCardFromHand;
+use App\Events\PlayerEndsTurnNotification;
 use App\Events\PlayerLayDownCards;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
@@ -53,6 +54,10 @@ class Player {
 
   public function layDownCards(): void {
     event(new PlayerLayDownCards($this->id));
+  }
+
+  public function endTurn(): void {
+    event(new PlayerEndsTurnNotification($this->id));
   }
 
   public function availableActions(): array {

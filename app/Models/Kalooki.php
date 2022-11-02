@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\PlayerActions;
 use App\Events\PlayerDiscardCardFromHand;
+use App\Events\PlayerEndsTurnNotification;
 use App\Events\PlayerLayDownCards;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
@@ -147,9 +148,33 @@ class Kalooki {
     $gameData = GameCache::getGameState($event->playerId);
     $game = $gameData['game'];
     $player = $gameData['player'];
+    $player->availableActions = $this->getAvailableActions($player, $game);
+    if(!in_array(PlayerActions::layDownCards, $player->availableActions)) {
+      throw new IllegalActionException('Player cannot lay down cards.');
+    }
     $this->layDownPlayersCards($player);
     $player->actionsTaken[] = PlayerActions::layDownCards;
-    $player->availableActions = $this->getAvailableActions($player, $game);
+    GameCache::cacheGame($game);
+  }
+
+  /**
+   * @throws \App\Exceptions\IllegalActionException
+   */
+  public function playerEndsTurn(PlayerEndsTurnNotification $event): void {
+    $gameData = GameCache::getGameState($event->playerId);
+    $game = $gameData['game'];
+    /** @var \App\Models\Player $player */
+    $player = $gameData['player'];
+    $availableActions = $this->getAvailableActions($player, $game);
+    if(!in_array(PlayerActions::endTurn, $availableActions)) {
+      throw new IllegalActionException('Player cannot end turn.');
+    }
+    $player->availableActions = [];
+    $player->actionsTaken = [];
+    $player->isTurn = FALSE;
+    // Notify the next player that it is their turn.
+    $nextPlayer = $this->getNextPlayer($player, $game);
+    $this->setTurn($nextPlayer->id);
     GameCache::cacheGame($game);
   }
 
@@ -202,7 +227,9 @@ class Kalooki {
       if(!empty($game->stock)) {
         $actions[] = PlayerActions::requestCardFromStockPile;
       }
-      if(!empty($game->discard)) {
+      // Player can request card from discard if the discard pile is not empty,
+      // and they have not laid down cards.
+      if(!empty($game->discard) && empty($player->laidDownThrees) && empty($player->laidDownFours)) {
         $actions[] = PlayerActions::requestCardFromDiscardPile;
       }
       return $actions;
@@ -223,22 +250,24 @@ class Kalooki {
         $actions[] = PlayerActions::discardCardFromHand;
       }
     }
-//    if (!empty($player->contractSatisfied())) {
-//      $actions[] = PlayerActions::layDownCards;
-//    }
-//    // if there are cards in the discard pile, a player can request a card from it.
-//    if (!empty($game->discard)) {
-//      $actions[] = PlayerActions::requestCardFromDiscardPile;
-//    }
-//    // if there are cards in the stockpile, a player can request a card from it.
-//    if (!empty($game->stock)) {
-//      $actions[] = PlayerActions::requestCardFromStockPile;
-//    }
-//    // if a player has cards in their hand, they can discard a card.
-//    if (!empty($player->hand->cards)) {
-//      $actions[] = PlayerActions::discardCardFromHand;
-//    }
+    // If a player has drawn a card and discarded a card they can end their turn
+    if(in_array(PlayerActions::discardCardFromHand, $actionsAlreadyTaken) &&
+      (in_array(PlayerActions::requestCardFromDiscardPile, $actionsAlreadyTaken) ||
+        in_array(PlayerActions::requestCardFromStockPile, $actionsAlreadyTaken))) {
+      $actions[] = PlayerActions::endTurn;
+    }
     return $actions;
+  }
+
+  private function getNextPlayer(Player $player, Kalooki $game): Player {
+    //get the players index in the game.
+    $playerIndex = collect($game->players)->search(fn(Player $p) => $p->id === $player->id);
+    // if the player is the last player in the game, return the first player.
+    if($playerIndex === count($game->players) - 1) {
+      return $game->players[0];
+    }
+    // return the next player.
+    return $game->players[$playerIndex + 1];
   }
 
 }
