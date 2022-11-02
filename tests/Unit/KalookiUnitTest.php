@@ -643,5 +643,10 @@ it('detects the next player\'s turn', function () {
   $player1->endTurn();
   expect($player1->isTurn)->toBeFalse()
     ->and($player2->isTurn)->toBeTrue();
+  $player2->drawFromStockPile();
+  $player2->discardFromHand($player2->hand->cards[0]);
+  $player2->endTurn();
+  expect($player1->isTurn)->toBeTrue()
+    ->and($player2->isTurn)->toBeFalse();
 
 });
