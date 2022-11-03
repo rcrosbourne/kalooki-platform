@@ -554,7 +554,8 @@ it('reevaluates a player\'s available actions in a given turn if the player does
     ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::layDownCards);
   $player1->layDownCards();
   // Winner
-  expect($player1->availableActions())->toHaveCount(0)
+  expect($player1->availableActions())->toHaveCount(1)
+    ->and($player1->availableActions())->toContain(\App\Enums\PlayerActions::endTurn)
     ->and($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::discardCardFromHand);
 });
 

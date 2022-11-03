@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import {Head} from '@inertiajs/inertia-react';
+import { Head, Link } from "@inertiajs/inertia-react";
 import {showNotification} from '@mantine/notifications';
 import {IconX} from "@tabler/icons";
+import route from '../../../vendor/tightenco/ziggy/dist/index.m';
 
 export default function Dashboard(props) {
     const [userLoggedIn, setUserLoggedIn] = useState(null);
@@ -28,11 +29,14 @@ export default function Dashboard(props) {
         >
             <Head title="Dashboard"/>
 
-            <div className="py-12">
+            <div className="py-12 bg-dark-blue min-h-screen">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 bg-white border-b border-gray-200">{props.auth.user.name} You're logged in!</div>
-
+                        <div className="p-6 bg-gray-600 border-b border-gray-700 text-light-green">
+                            <Link href={route('game.create')} method="get" as="button" className="">
+                                Create a Game
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

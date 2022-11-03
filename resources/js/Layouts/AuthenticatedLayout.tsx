@@ -21,7 +21,7 @@ export default function Authenticated({ auth, header, children }: Props) {
 
     return (
         <div className="min-h-screen bg-gray-100">
-            <nav className="bg-white border-b border-gray-100">
+            <nav className="bg-gray-100 border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
                         <div className="flex">
@@ -48,6 +48,7 @@ export default function Authenticated({ auth, header, children }: Props) {
                                                 className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
                                             >
                                                 {auth.user.name}
+
 
                                                 <svg
                                                     className="ml-2 -mr-0.5 h-4 w-4"

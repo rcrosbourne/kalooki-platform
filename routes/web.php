@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\GameStatus;
+use App\Models\Game;
 use App\Models\Kalooki;
 use App\Models\Player;
 use Illuminate\Foundation\Application;
@@ -29,5 +31,14 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
   return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::post('/kalooki/create', function () {
+  $game = new Game();
+  $game->code =  Game::generateCode();
+  $game->status = GameStatus::created;
+  $game->created_by = auth()->user()->id;
+  $game->save();
+  return redirect('/kalooki/' . $game->id);
+})->middleware(['auth', 'verified'])->name('game.create');
 
 require __DIR__ . '/auth.php';
