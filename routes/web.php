@@ -4,6 +4,10 @@ use App\Enums\GameStatus;
 use App\Events\GameStarted;
 use App\Events\PlayerJoined;
 use App\Facades\GameCache;
+use App\Http\Controllers\CreateGameController;
+use App\Http\Controllers\JoinGameController;
+use App\Http\Controllers\StartGameController;
+use App\Http\Controllers\WaitingRoomController;
 use App\Models\Game;
 use App\Models\Kalooki;
 use App\Models\Player;
@@ -35,59 +39,13 @@ Route::get('/dashboard', function () {
   return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::post('/kalooki/create', function () {
-  $game = new Game();
-  $game->code =  Game::generateCode();
-  $game->status = GameStatus::created;
-  $game->created_by = auth()->user()->id;
-  $game->players = [['id' => auth()->user()->id, 'name' => auth()->user()->name]];
-  $game->invite_link = route('kalooki.join', ['code' => $game->code]);
-  $game->save();
-  return redirect('/kalooki/' . $game->id);
-})->middleware(['auth', 'verified'])->name('game.create');
+Route::post('/kalooki/create', CreateGameController::class)->middleware(['auth', 'verified'])->name('game.create');
 
-Route::get('/kalooki/{game}', function (Game $game) {
+Route::get('/kalooki/{game}', WaitingRoomController::class);
 
-  return Inertia::render('WaitingRoom', [
-    'gameId' => $game->id,
-    'code' => $game->code,
-    'players' => $game->players,
-    'inviteLink' => $game->invite_link,
-    'isCreator' => $game->created_by === auth()->user()->id,
-  ]);
-});
+Route::get('/kalooki/join/{code}', JoinGameController::class)->name('kalooki.join')->middleware(['auth', 'verified']);
 
-Route::get('/kalooki/join/{code}', function ($code) {
-  $game = Game::where('code', $code)->first();
-  if ($game) {
-    // validate that the game is not full
-    abort_if(count($game->players) >= 2, 404, 'Game is full');
-    // validate that the user is not already in the game
-    abort_if(in_array(auth()->user()->id, array_column($game->players, 'id')), 404, 'You are already in this game');
-    // add player to game
-    $game->players = array_merge([['id' => auth()->user()->id, 'name' => auth()->user()->name]], $game->players);
-    $game->save();
-    broadcast(new PlayerJoined($game->id, ['id' => auth()->user()->id, 'name' => auth()->user()->name]));
-    return redirect('/kalooki/' . $game->id);
-  }
-  return redirect('/')-with('error', 'Game not found');
-})->name('kalooki.join')->middleware(['auth', 'verified']);
-
-Route::post('/kalooki/{game}/start', function (Game $game) {
-  if(count($game->players) < 2) {
-    return redirect('/kalooki/' . $game->id)->with('error', 'You need at least 2 players to start the game');
-  }
-  abort_if($game->created_by !== auth()->user()->id, 403, 'You are not the creator of this game');
-  $game->status = GameStatus::started;
-  // set up Kalooki game
-  $kalooki = new Kalooki(players: [new Player(name: $game->players[0]['name'], id: $game->players[0]['id']), new Player(name: $game->players[1]['name'], id: $game->players[1]['id'])]);
-  $kalooki->deal();
-  $kalooki->started = TRUE;
-  GameCache::cacheGame($kalooki);
-  $game->save();
-  broadcast(new GameStarted($game->id, $game->players[0]['id'] ));
-  broadcast(new GameStarted($game->id, $game->players[1]['id'] ));
-})->middleware(['auth', 'verified'])->name('game.start');
+Route::post('/kalooki/{game}/start', StartGameController::class)->middleware(['auth', 'verified'])->name('game.start');
 
 Route::get('/kalooki/{game}/play', function (Game $game) {
   $kalooki = GameCache::getGameState($game->id);
