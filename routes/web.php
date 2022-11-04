@@ -60,16 +60,24 @@ Route::get('/kalooki/{game}', function (Game $game) {
 Route::get('/kalooki/join/{code}', function ($code) {
   $game = Game::where('code', $code)->first();
   if ($game) {
+    // validate that the game is not full
+    abort_if(count($game->players) >= 2, 404, 'Game is full');
+    // validate that the user is not already in the game
+    abort_if(in_array(auth()->user()->id, array_column($game->players, 'id')), 404, 'You are already in this game');
     // add player to game
     $game->players = array_merge([['id' => auth()->user()->id, 'name' => auth()->user()->name]], $game->players);
     $game->save();
     broadcast(new PlayerJoined($game->id, ['id' => auth()->user()->id, 'name' => auth()->user()->name]));
     return redirect('/kalooki/' . $game->id);
   }
-  return redirect('/');
+  return redirect('/')-with('error', 'Game not found');
 })->name('kalooki.join')->middleware(['auth', 'verified']);
 
 Route::post('/kalooki/{game}/start', function (Game $game) {
+  if(count($game->players) < 2) {
+    return redirect('/kalooki/' . $game->id)->with('error', 'You need at least 2 players to start the game');
+  }
+  abort_if($game->created_by !== auth()->user()->id, 403, 'You are not the creator of this game');
   $game->status = GameStatus::started;
   // set up Kalooki game
   $kalooki = new Kalooki(players: [new Player(name: $game->players[0]['name'], id: $game->players[0]['id']), new Player(name: $game->players[1]['name'], id: $game->players[1]['id'])]);
