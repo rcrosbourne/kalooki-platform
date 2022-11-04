@@ -33,7 +33,7 @@ export default function Dashboard(props) {
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 bg-gray-600 border-b border-gray-700 text-light-green">
-                            <Link href={route('game.create')} method="get" as="button" className="">
+                            <Link href={route('game.create')} method="post" as="button" className="">
                                 Create a Game
                             </Link>
                         </div>

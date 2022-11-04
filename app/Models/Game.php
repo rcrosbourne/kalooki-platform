@@ -11,13 +11,16 @@ use Illuminate\Support\Str;
  * @property mixed|string                $code
  * @property \App\Enums\GameStatus|mixed $status
  * @property mixed                       $created_by
+ * @property mixed                       $players
+ * @property mixed|string                $invite_link
  */
 class Game extends Model {
 
   use HasFactory;
 
   protected $casts = [
-    'status' => 'App\Enums\GameStatus',
+      'status'  => 'App\Enums\GameStatus',
+      'players' => 'array',
   ];
 
   public static function generateCode(): string {
@@ -31,5 +34,4 @@ class Game extends Model {
   public function creator(): BelongsTo {
     return $this->belongsTo(User::class, 'created_by');
   }
-
 }

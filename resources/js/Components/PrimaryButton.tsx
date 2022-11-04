@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { MouseEventHandler } from "react";
 interface Props {
     type?: 'button' | 'submit' | 'reset' | undefined;
     className?: string;
     children: React.ReactNode;
     processing?: boolean;
+    onClick?: MouseEventHandler<HTMLButtonElement>,
 }
-export default function PrimaryButton({ type = 'submit', className = '', processing, children }: Props) {
+export default function PrimaryButton({ type = 'submit', className = '', processing, onClick, children }: Props) {
     return (
         <button
             type={type}
@@ -15,6 +16,7 @@ export default function PrimaryButton({ type = 'submit', className = '', process
                 } ` + className
             }
             disabled={processing}
+            onClick={onClick}
         >
             {children}
         </button>

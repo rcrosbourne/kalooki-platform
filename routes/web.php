@@ -1,6 +1,9 @@
 <?php
 
 use App\Enums\GameStatus;
+use App\Events\GameStarted;
+use App\Events\PlayerJoined;
+use App\Facades\GameCache;
 use App\Models\Game;
 use App\Models\Kalooki;
 use App\Models\Player;
@@ -37,8 +40,62 @@ Route::post('/kalooki/create', function () {
   $game->code =  Game::generateCode();
   $game->status = GameStatus::created;
   $game->created_by = auth()->user()->id;
+  $game->players = [['id' => auth()->user()->id, 'name' => auth()->user()->name]];
+  $game->invite_link = route('kalooki.join', ['code' => $game->code]);
   $game->save();
   return redirect('/kalooki/' . $game->id);
 })->middleware(['auth', 'verified'])->name('game.create');
+
+Route::get('/kalooki/{game}', function (Game $game) {
+
+  return Inertia::render('WaitingRoom', [
+    'gameId' => $game->id,
+    'code' => $game->code,
+    'players' => $game->players,
+    'inviteLink' => $game->invite_link,
+    'isCreator' => $game->created_by === auth()->user()->id,
+  ]);
+});
+
+Route::get('/kalooki/join/{code}', function ($code) {
+  $game = Game::where('code', $code)->first();
+  if ($game) {
+    // add player to game
+    $game->players = array_merge([['id' => auth()->user()->id, 'name' => auth()->user()->name]], $game->players);
+    $game->save();
+    broadcast(new PlayerJoined($game->id, ['id' => auth()->user()->id, 'name' => auth()->user()->name]));
+    return redirect('/kalooki/' . $game->id);
+  }
+  return redirect('/');
+})->name('kalooki.join')->middleware(['auth', 'verified']);
+
+Route::post('/kalooki/{game}/start', function (Game $game) {
+  $game->status = GameStatus::started;
+  // set up Kalooki game
+  $kalooki = new Kalooki(players: [new Player(name: $game->players[0]['name'], id: $game->players[0]['id']), new Player(name: $game->players[1]['name'], id: $game->players[1]['id'])]);
+  $kalooki->deal();
+  $kalooki->started = TRUE;
+  GameCache::cacheGame($kalooki);
+  $game->save();
+  broadcast(new GameStarted($game->id, $game->players[0]['id'] ));
+  broadcast(new GameStarted($game->id, $game->players[1]['id'] ));
+})->middleware(['auth', 'verified'])->name('game.start');
+
+Route::get('/kalooki/{game}/play', function (Game $game) {
+  $kalooki = GameCache::getGameState($game->id);
+  return Inertia::render('Board', [
+//    'gameId' => $game->id,
+//    'code' => $game->code,
+//    'players' => $game->players,
+//    'inviteLink' => $game->invite_link,
+//    'isCreator' => $game->created_by === auth()->user()->id,
+//    'player' => $kalooki->players[0]->id === auth()->user()->id ? $kalooki->players[0] : $kalooki->players[1],
+//    'opponent' => $kalooki->players[0]->id === auth()->user()->id ? $kalooki->players[1] : $kalooki->players[0],
+//    'turn' => $kalooki->turn,
+//    'started' => $kalooki->started,
+//    'finished' => $kalooki->finished,
+//    'winner' => $kalooki->winner,
+  ]);
+})->middleware(['auth', 'verified'])->name('game.play');
 
 require __DIR__ . '/auth.php';

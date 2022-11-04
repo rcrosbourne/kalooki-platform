@@ -17,6 +17,7 @@ return new class extends Migration {
       $table->string('code', 6)->unique();
       $table->string('status')->default('created');
       $table->foreignId('created_by')->constrained('users');
+      $table->json('players');
       $table->json('state')->nullable();
       $table->timestamps();
     });

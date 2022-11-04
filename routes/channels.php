@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Game;
+use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -14,5 +16,11 @@ use Illuminate\Support\Facades\Broadcast;
 */
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+  return (int) $user->id === (int) $id;
+});
+Broadcast::channel('game-{game}', function (User $user, Game $game) {
+  return $game->creator->id === $user->id;
+});
+Broadcast::channel('started.{game}.{recipient}', function (User $user, Game $game, User $recipient) {
+  return $user->id === $recipient->id;
 });
