@@ -11,12 +11,14 @@ interface Props {
     gameId: string;
     player: {id: string, name: string};
     hand: Card[];
-    // opponent: {id: string, name: string};
-    // turn: string;
+    opponent: string;
+    turn: string;
+    isTurn: boolean;
 }
 
-export default function Board({gameId, player, hand}: Props) {
+export default function Board({gameId, player, hand, opponent, turn, isTurn}: Props) {
     const [playerHand, playerHandHandler] = useListState(hand);
+    const [myTurn, setMyTurn] = useState(isTurn);
     const [playerTopThrees, playerTopThreesHandler] = useListState([]);
     const [playerBottomThrees, playerBottomThreesHandler] = useListState([]);
     const [playerFours, playerFoursHandler] = useListState([]);
@@ -66,7 +68,7 @@ export default function Board({gameId, player, hand}: Props) {
         <>
             <Head title="Board" />
             <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-dark-blue px-4 pt-5 dark:bg-dark-blue sm:items-center sm:pt-0">
-                <GameStats contract={"2 Threes 1 Fours"} turn={'Nina'} />
+                <GameStats opponent={opponent} turn={turn} />
                 <DragDropContext
                     onDragEnd={({ source, destination }) =>
                         playerHandHandler.reorder({
@@ -139,7 +141,7 @@ export default function Board({gameId, player, hand}: Props) {
                         />
                     </div>
                     <div className="mt-[30px]">
-                        <ActionBar />
+                        <ActionBar disableActions={!myTurn} />
                         <Meld
                             droppableId={"playerHand"}
                             className="mt-5 flex items-center justify-center p-4"

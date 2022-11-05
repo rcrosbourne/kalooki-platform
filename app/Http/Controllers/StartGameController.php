@@ -34,6 +34,7 @@ class StartGameController extends Controller {
     ]);
     $kalooki->deal();
     $kalooki->started = TRUE;
+    $kalooki->players[rand(0, 1)]->isTurn = TRUE;
     GameCache::cacheGame($kalooki);
     $game->save();
     broadcast(new GameStarted($game->id, $game->players[0]['id']));

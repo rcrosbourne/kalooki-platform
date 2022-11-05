@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\PlayerActions;
-use App\Events\CardDealt;
 use App\Events\GameOver;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerEndsTurnNotification;
@@ -63,7 +62,6 @@ class Kalooki {
       $playerIndex = $i % $playerCount;
       $card = array_pop($this->deck);
       $this->players[$playerIndex]->hand->cards[] = $card;
-      broadcast(new CardDealt($this->id, $this->players[$playerIndex]->id, $card));
     }
     // Add 1 card to the discard pile.
     $this->discard[] = array_pop($this->deck);
@@ -211,6 +209,7 @@ class Kalooki {
     // set player available actions, based on their hand.
     $player->availableActions = $this->getAvailableActions($player, $game);
     event(new PlayerTurnNotification($player->id));
+    dd($game);
     GameCache::cacheGame($game);
   }
 

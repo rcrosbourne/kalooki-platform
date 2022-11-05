@@ -50,23 +50,17 @@ Route::post('/kalooki/{game}/start', StartGameController::class)->middleware(['a
 Route::get('/kalooki/{game}/play', function (Game $game) {
   $gameState = GameCache::getGameState(auth()->user()->id);
   // turn is random at start of game
-  $turn = rand(0, 1);
-  return Inertia::render('Board', [
-    'gameId' => $game->id,
-    //    'code' => $game->code,
-    //    'players' => $game->players,
-    //    'inviteLink' => $game->invite_link,
-    //    'isCreator' => $game->created_by === auth()->user()->id,
-    'player' => $gameState['player'],
-    'hand'   => $gameState['player']->hand->cards,
-    //    'opponent' => $kalooki->players[0]->id === auth()->user()->id ? $kalooki->players[1] : $kalooki->players[0],
-    // turn is random at the start of the game
-    //    'turn' => $kalooki->players[$turn]->id === auth()->user()->id ? 'player' : 'opponent',
+  $players = $gameState['game']->players;
+  $opponent = $players[array_search(auth()->user()->name, array_column($players, 'name')) === 0 ? 1 : 0]->name;
 
-    //    'turn' => $kalooki->turn,
-    //    'started' => $kalooki->started,
-    //    'finished' => $kalooki->finished,
-    //    'winner' => $kalooki->winner,
+  return Inertia::render('Board', [
+    'gameId'   => $game->id,
+    'player'   => $gameState['player'],
+    'hand'     => $gameState['player']->hand->cards,
+    'opponent' => $opponent,
+    'turn'   => $gameState['player']->isTurn ? 'Yours' : $opponent . '\'s',
+    'isTurn' => $gameState['player']->isTurn,
+    // turn is random at the start of the game
   ]);
 })->middleware(['auth', 'verified'])->name('game.play');
 

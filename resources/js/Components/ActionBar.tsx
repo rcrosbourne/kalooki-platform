@@ -1,18 +1,18 @@
 import React from "react";
 import GameButton from "@/Components/GameButton";
 
-export default function ActionBar() {
+export default function ActionBar({disableActions= false}) {
     return (
         <menu className="flex w-full">
             <ul className="grid w-full grid-cols-3 place-content-stretch gap-2">
                 <li>
-                    <GameButton>Draw</GameButton>
+                    <GameButton processing={disableActions}>Draw</GameButton>
                 </li>
                 <li>
-                    <GameButton>Discard</GameButton>
+                    <GameButton processing={disableActions}>Discard</GameButton>
                 </li>
                 <li>
-                    <GameButton>Lay Cards</GameButton>
+                    <GameButton processing={disableActions}>Lay Cards</GameButton>
                 </li>
             </ul>
         </menu>
