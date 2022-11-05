@@ -7,24 +7,66 @@ import GameStats from "@/Components/GameStats";
 import Meld from "@/Components/Meld";
 import ActionBar from "@/Components/ActionBar";
 
-const cards = [
-    <Card suit={"diamond"} value={"king"} faceDown={false} index={0} key={0} />,
-    <Card suit={"diamond"} value={"jack"} faceDown={false} index={1} key={1} />,
-    <Card value={"joker"} faceDown={false} index={2} key={2} suit={"hearts"}/>,
-    <Card value={"queen"} suit={"hearts"} faceDown={false} index={3} key={3} />,
-    <Card value={"ace"} suit={"spades"} faceDown={false} index={4} key={4} />,
-    <Card value={"2"} suit={"spades"} faceDown={false} index={5} key={5} />,
-    <Card value={"3"} suit={"spades"} faceDown={false} index={6} key={6} />,
-    <Card value={"4"} suit={"spades"} faceDown={false} index={7} key={7} />,
-    <Card value={"5"} suit={"spades"} faceDown={false} index={8} key={8} />,
-];
-export default function Board() {
-    const [playerHand, playerHandHandler] = useListState(cards);
+interface Props {
+    gameId: string;
+    player: {id: string, name: string};
+    hand: Card[];
+    // opponent: {id: string, name: string};
+    // turn: string;
+}
+
+export default function Board({gameId, player, hand}: Props) {
+    const [playerHand, playerHandHandler] = useListState(hand);
+    const [playerTopThrees, playerTopThreesHandler] = useListState([]);
+    const [playerBottomThrees, playerBottomThreesHandler] = useListState([]);
+    const [playerFours, playerFoursHandler] = useListState([]);
+    const [opponentTopThrees, opponentTopThreesHandler] = useListState([]);
+    const [opponentBottomThrees, opponentBottomThreesHandler] = useListState([]);
+    const [opponentFours, opponentFoursHandler] = useListState([]);
+    const [discardPile, discardPileHandler ] = useListState([]);
+    // This will need to change for security reasons
+    // The entire list cannot be on the client.
+    const [stockPile, stockPileHandler ] = useListState([]);
+    // const [turn, setTurn] = useState(turn);
+    const playerPrivateChannel = `game.${gameId}.${player.id}`;
+    const gamePublicChannel = `game.${gameId}`;
+
+    // set up listeners
+    // useEffect(() => {
+    //     window.Echo.private(playerPrivateChannel).listen("CardDealt", (e) => {
+    //         // const index = playerHand.length;
+    //         // playerHandHandler.append(new Card({id: e.card.id, suit: e.card.suit, value: e.card.value, index: index}));
+    //         // console.log("player-hand", playerHand);
+    //     });
+    //     window.Echo.private(playerPrivateChannel).listen("TurnChanged", (e) => {
+    //         // setTurn(e.turn);
+    //     });
+    //     // window.Echo.private(gamePublicChannel).listen("MeldAdded", (e) => {
+    //     //     if (e.playerId === player.id) {
+    //     //         if (e.meld.length === 3) {
+    //     //             playerThreesHandler.add(e.meld);
+    //     //         } else {
+    //     //             playerFoursHandler.add(e.meld);
+    //     //         }
+    //     //     } else {
+    //     //         if (e.meld.length === 3) {
+    //     //             opponentThreesHandler.add(e.meld);
+    //     //         } else {
+    //     //             opponentFoursHandler.add(e.meld);
+    //     //         }
+    //     //     }
+    //     // });
+    //     return () => {
+    //         window.Echo.leaveChannel(playerPrivateChannel);
+    //         window.Echo.leaveChannel(gamePublicChannel);
+    //     };
+    // }, []);
+
     return (
         <>
             <Head title="Board" />
             <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-dark-blue px-4 pt-5 dark:bg-dark-blue sm:items-center sm:pt-0">
-                <GameStats contract={"2 Threes 1 Fours"} turn={"Nina"} />
+                <GameStats contract={"2 Threes 1 Fours"} turn={'Nina'} />
                 <DragDropContext
                     onDragEnd={({ source, destination }) =>
                         playerHandHandler.reorder({
@@ -35,20 +77,20 @@ export default function Board() {
                     <div className="mt-8 grid max-h-[433px] w-full flex-1 grid-cols-4 gap-2 rounded-xl border border-light-brown bg-light-blue p-4">
                         <Meld
                             droppableId={"opponentTopThree"}
-                            cards={playerHand.slice(0, 3)}
+                            cards={opponentTopThrees}
                         />
                         <Meld
                             droppableId={"opponentFour"}
-                            cards={playerHand.slice(3, 7)}
+                            cards={opponentFours}
                             className="col-span-2 col-start-3"
                         />
                         <Meld
                             droppableId={"opponentBottomThree"}
-                            cards={playerHand.slice(2, 5)}
+                            cards={opponentBottomThrees}
                         />
 
                         <div className="col-start-2 row-start-3 grid">
-                            {[12, 13, 14, 15].map((number, index) => (
+                            {stockPile.map((number, index) => (
                                 <div className="col-start-1 row-start-1">
                                     <Card
                                         index={number}
@@ -66,8 +108,7 @@ export default function Board() {
                                     {...provided.droppableProps}
                                     ref={provided.innerRef}
                                     className="col-start-3 row-start-3 grid">
-                                    {playerHand
-                                        .slice(3, 7)
+                                    {discardPile
                                         .map((card, index) => (
                                             <div
                                                 key={index}
@@ -81,19 +122,19 @@ export default function Board() {
                         </Droppable>
                         <Meld
                             droppableId={"playerTopThree"}
-                            cards={playerHand.slice(0, 3)}
+                            cards={playerTopThrees}
                             className={"row-start-4"}
                         />
 
                         <Meld
                             droppableId={"playerBottomThree"}
-                            cards={playerHand.slice(3, 7)}
+                            cards={playerBottomThrees}
                             className={"row-start-5"}
                         />
 
                         <Meld
                             droppableId={"playerFour"}
-                            cards={playerHand.slice(3, 7)}
+                            cards={playerFours}
                             className={"col-span-2 col-start-3 row-start-5"}
                         />
                     </div>

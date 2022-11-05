@@ -1,8 +1,9 @@
 import React, { ReactNode } from "react";
 import { Droppable } from "react-beautiful-dnd";
+import Card from "@/Components/Card";
 interface Props {
     droppableId: string;
-    cards: ReactNode[];
+    cards: Card[];
     className?: string;
 
 }
@@ -23,7 +24,7 @@ export default function Meld({ droppableId, cards, className}: Props) {
                     className={"flex " + getMeldSpacing() + className}>
                     {cards.map((card, index) => (
                         <div key={index} className="flex-1">
-                            {card}
+                            <Card {...card} index={index}/>
                         </div>
                     ))}
                     {provided.placeholder}

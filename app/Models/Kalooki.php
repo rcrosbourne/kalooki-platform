@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PlayerActions;
+use App\Events\CardDealt;
 use App\Events\GameOver;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerEndsTurnNotification;
@@ -25,7 +26,7 @@ class Kalooki {
     public array $deck = [], public array $discard = [], public array $stock = [],
   ) {
     $this->deck = count($deck) === 0 ? $this->createDeck() : $deck;
-    $this->id = $id ?: (string) Str::orderedUuid();
+    $this->id = $id ?: (string) Str::orderedUuid(); // need to generate a new id if one is not passed in
     $this->winner = NULL;
     GameCache::cacheGame($this);
   }
@@ -60,7 +61,9 @@ class Kalooki {
     $cardsToDeal = $playerCount * $cardsPerPlayer;
     for ($i = 0; $i < $cardsToDeal; $i++) {
       $playerIndex = $i % $playerCount;
-      $this->players[$playerIndex]->hand->cards[] = array_pop($this->deck);
+      $card = array_pop($this->deck);
+      $this->players[$playerIndex]->hand->cards[] = $card;
+      broadcast(new CardDealt($this->id, $this->players[$playerIndex]->id, $card));
     }
     // Add 1 card to the discard pile.
     $this->discard[] = array_pop($this->deck);
@@ -74,7 +77,10 @@ class Kalooki {
 
   private function createDeck(): array {
     Deck::initialize();
-    return array_merge(Deck::cards(), Deck::cards());
+    $firstDeck = Deck::cards();
+    Deck::initialize();
+    $secondDeck = Deck::cards();
+    return array_merge($firstDeck, $secondDeck);
   }
 
   public static function fake(array $data = []): Kalooki {

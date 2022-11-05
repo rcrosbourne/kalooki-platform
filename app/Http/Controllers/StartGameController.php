@@ -26,7 +26,9 @@ class StartGameController extends Controller {
     abort_if($game->created_by !== auth()->user()->id, 403, 'You are not the creator of this game');
     $game->status = GameStatus::started;
     // set up Kalooki game
-    $kalooki = new Kalooki(players: [
+    $kalooki = new Kalooki(
+      id: $game->id,
+      players: [
       new Player(name: $game->players[0]['name'], id: $game->players[0]['id']),
       new Player(name: $game->players[1]['name'], id: $game->players[1]['id']),
     ]);

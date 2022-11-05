@@ -24,3 +24,7 @@ Broadcast::channel('game-{game}', function (User $user, Game $game) {
 Broadcast::channel('started.{game}.{recipient}', function (User $user, Game $game, User $recipient) {
   return $user->id === $recipient->id;
 });
+
+Broadcast::channel('game.{game}.{player}', function (User $user, Game $game, User $player) {
+  return !empty($game) && $user->id === $player->id;
+});

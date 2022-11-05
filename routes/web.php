@@ -27,12 +27,12 @@ use Inertia\Inertia;
 */
 
 Route::get('/', function () {
-      return Inertia::render('Landing', [
-          'canLogin' => Route::has('login'),
-          'canRegister' => Route::has('register'),
-          'laravelVersion' => Application::VERSION,
-          'phpVersion' => PHP_VERSION,
-      ]);
+  return Inertia::render('Landing', [
+    'canLogin'       => Route::has('login'),
+    'canRegister'    => Route::has('register'),
+    'laravelVersion' => Application::VERSION,
+    'phpVersion'     => PHP_VERSION,
+  ]);
 });
 
 Route::get('/dashboard', function () {
@@ -48,19 +48,25 @@ Route::get('/kalooki/join/{code}', JoinGameController::class)->name('kalooki.joi
 Route::post('/kalooki/{game}/start', StartGameController::class)->middleware(['auth', 'verified'])->name('game.start');
 
 Route::get('/kalooki/{game}/play', function (Game $game) {
-  $kalooki = GameCache::getGameState($game->id);
+  $gameState = GameCache::getGameState(auth()->user()->id);
+  // turn is random at start of game
+  $turn = rand(0, 1);
   return Inertia::render('Board', [
-//    'gameId' => $game->id,
-//    'code' => $game->code,
-//    'players' => $game->players,
-//    'inviteLink' => $game->invite_link,
-//    'isCreator' => $game->created_by === auth()->user()->id,
-//    'player' => $kalooki->players[0]->id === auth()->user()->id ? $kalooki->players[0] : $kalooki->players[1],
-//    'opponent' => $kalooki->players[0]->id === auth()->user()->id ? $kalooki->players[1] : $kalooki->players[0],
-//    'turn' => $kalooki->turn,
-//    'started' => $kalooki->started,
-//    'finished' => $kalooki->finished,
-//    'winner' => $kalooki->winner,
+    'gameId' => $game->id,
+    //    'code' => $game->code,
+    //    'players' => $game->players,
+    //    'inviteLink' => $game->invite_link,
+    //    'isCreator' => $game->created_by === auth()->user()->id,
+    'player' => $gameState['player'],
+    'hand'   => $gameState['player']->hand->cards,
+    //    'opponent' => $kalooki->players[0]->id === auth()->user()->id ? $kalooki->players[1] : $kalooki->players[0],
+    // turn is random at the start of the game
+    //    'turn' => $kalooki->players[$turn]->id === auth()->user()->id ? 'player' : 'opponent',
+
+    //    'turn' => $kalooki->turn,
+    //    'started' => $kalooki->started,
+    //    'finished' => $kalooki->finished,
+    //    'winner' => $kalooki->winner,
   ]);
 })->middleware(['auth', 'verified'])->name('game.play');
 
