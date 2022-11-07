@@ -14,9 +14,11 @@ interface Props {
     opponent: string;
     turn: string;
     isTurn: boolean;
+    stock: Card[];
+    discard: Card[];
 }
 
-export default function Board({gameId, player, hand, opponent, turn, isTurn}: Props) {
+export default function Board({gameId, player, hand, opponent, turn, isTurn, stock, discard}: Props) {
     const [playerHand, playerHandHandler] = useListState(hand);
     const [myTurn, setMyTurn] = useState(isTurn);
     const [playerTopThrees, playerTopThreesHandler] = useListState([]);
@@ -25,10 +27,10 @@ export default function Board({gameId, player, hand, opponent, turn, isTurn}: Pr
     const [opponentTopThrees, opponentTopThreesHandler] = useListState([]);
     const [opponentBottomThrees, opponentBottomThreesHandler] = useListState([]);
     const [opponentFours, opponentFoursHandler] = useListState([]);
-    const [discardPile, discardPileHandler ] = useListState([]);
+    const [discardPile, discardPileHandler ] = useListState(discard);
     // This will need to change for security reasons
     // The entire list cannot be on the client.
-    const [stockPile, stockPileHandler ] = useListState([]);
+    const [stockPile, stockPileHandler ] = useListState(stock);
     // const [turn, setTurn] = useState(turn);
     const playerPrivateChannel = `game.${gameId}.${player.id}`;
     const gamePublicChannel = `game.${gameId}`;
@@ -92,14 +94,12 @@ export default function Board({gameId, player, hand, opponent, turn, isTurn}: Pr
                         />
 
                         <div className="col-start-2 row-start-3 grid">
-                            {stockPile.map((number, index) => (
-                                <div className="col-start-1 row-start-1">
+                            {stockPile.map((card, index) => (
+                                <div className="col-start-1 row-start-1" key={`${card.id}-${index}`}>
                                     <Card
-                                        index={number}
-                                        key={Math.floor(number * Math.PI)}
-                                        value={"joker"}
-                                        suit={"hearts"}
-                                        faceDown={true}
+                                      {...card}
+                                      faceDown={true}
+                                      index={index}
                                     />
                                 </div>
                             ))}
@@ -115,7 +115,7 @@ export default function Board({gameId, player, hand, opponent, turn, isTurn}: Pr
                                             <div
                                                 key={index}
                                                 className="col-start-1 row-start-1 flex-1">
-                                                {card}
+                                                <Card {...card} index={index} />
                                             </div>
                                         ))}
                                     {provided.placeholder}

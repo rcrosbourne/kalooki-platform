@@ -209,7 +209,6 @@ class Kalooki {
     // set player available actions, based on their hand.
     $player->availableActions = $this->getAvailableActions($player, $game);
     event(new PlayerTurnNotification($player->id));
-    dd($game);
     GameCache::cacheGame($game);
   }
 

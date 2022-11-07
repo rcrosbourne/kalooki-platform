@@ -49,9 +49,12 @@ Route::post('/kalooki/{game}/start', StartGameController::class)->middleware(['a
 
 Route::get('/kalooki/{game}/play', function (Game $game) {
   $gameState = GameCache::getGameState(auth()->user()->id);
+  $kalooki = $gameState['game'];
   // turn is random at start of game
-  $players = $gameState['game']->players;
+  $players = $kalooki->players;
   $opponent = $players[array_search(auth()->user()->name, array_column($players, 'name')) === 0 ? 1 : 0]->name;
+  $stock  = $kalooki->stock;
+  $discard = $kalooki->discard;
 
   return Inertia::render('Board', [
     'gameId'   => $game->id,
@@ -60,6 +63,8 @@ Route::get('/kalooki/{game}/play', function (Game $game) {
     'opponent' => $opponent,
     'turn'   => $gameState['player']->isTurn ? 'Yours' : $opponent . '\'s',
     'isTurn' => $gameState['player']->isTurn,
+    'stock' => $stock,
+    'discard' => $discard,
     // turn is random at the start of the game
   ]);
 })->middleware(['auth', 'verified'])->name('game.play');
