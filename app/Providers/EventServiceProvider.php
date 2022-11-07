@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerEndsTurnNotification;
 use App\Events\PlayerLayDownCards;
+use App\Events\PlayerReorderHand;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
 use App\Events\PlayerTurnNotification;
@@ -44,6 +45,9 @@ class EventServiceProvider extends ServiceProvider {
       ],
       PlayerEndsTurnNotification::class         => [
         Kalooki::class . '@playerEndsTurn',
+      ],
+      PlayerReorderHand::class         => [
+        Kalooki::class . '@playerReorderHand',
       ],
     ];
 

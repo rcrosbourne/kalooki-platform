@@ -133,6 +133,44 @@ Route::post('/kalooki/{game}/discard-card-from-hand', function (Game $game) {
   return response()->json([]);
 })->middleware(["auth", "verified"])->name('game.discard-card-from-hand');
 
+Route::post('/kalooki/{game}/reorder-hand', function (Game $game) {
+  // load game from cache
+  $gameState = GameCache::getGameState(auth()->user()->id);
+  $fromIndex = request()->input('from');
+  $toIndex = request()->input('to');
+  /** @var Player $player */
+  $player = $gameState['player'];
+  // reorder hand
+  $player->reorderHand($fromIndex, $toIndex);
+  // reload game state
+  $gameState = GameCache::getGameState(auth()->user()->id);
+  /** @var Player $player */
+  $player = $gameState['player'];
+  // return available actions
+  return response()->json([
+    'availableActions' => $player->availableActions(),
+    'hand'             => $player->hand->cards,
+  ]);
+
+  // validate that it's your turn
+//  if ($player->isTurn) {
+//    // request card from stock pile
+//    $player->drawFromDiscardPile();
+//    // reload game state
+//    $gameState = GameCache::getGameState(auth()->user()->id);
+//    /** @var Player $player */
+//    $player = $gameState['player'];
+//    // return available actions
+//    return response()->json([
+//      'availableActions' => $player->availableActions(),
+//      'hand'             => $player->hand->cards,
+//      'discard'            => $gameState['game']->discard,
+//    ]);
+//  }
+  return response()->json([]);
+})->middleware(["auth", "verified"])->name('game.reorder-hand');
+
+
 Route::post('/kalooki/{game}/end-turn', function (Game $game) {
   $gameState = GameCache::getGameState(auth()->user()->id);
   /** @var Player $player */
@@ -160,4 +198,6 @@ Route::post('/kalooki/{game}/end-turn', function (Game $game) {
   }
   return response()->json([]);
 })->middleware(["auth", "verified"])->name('game.end-turn');
+
+
 require __DIR__ . '/auth.php';

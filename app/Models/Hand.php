@@ -307,4 +307,11 @@ class Hand {
     return $card;
   }
 
+  public function reorder(int $fromIndex, int $toIndex): void {
+    $card = $this->cards[$fromIndex];
+    unset($this->cards[$fromIndex]);
+    $this->cards = array_values($this->cards); // reindex array
+    array_splice($this->cards, $toIndex, 0, [$card]);
+  }
+
 }

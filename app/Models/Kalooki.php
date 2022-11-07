@@ -8,6 +8,7 @@ use App\Events\GameOver;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerEndsTurnNotification;
 use App\Events\PlayerLayDownCards;
+use App\Events\PlayerReorderHand;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
 use App\Events\PlayerTurnNotification;
@@ -157,6 +158,14 @@ class Kalooki {
     GameCache::cacheGame($game);
     // broadcast bord update
     broadcast(new BoardStateUpdated($game->id, ['stock' => $game->stock, 'discard' => $game->discard]));
+  }
+
+  public function playerReorderHand(PlayerReorderHand $event): void {
+    $gameData = GameCache::getGameState($event->playerId);
+    $game = $gameData['game'];
+    $player = $gameData['player'];
+    $player->hand->reorder($event->from, $event->to);
+    GameCache::cacheGame($game);
   }
 
   /**

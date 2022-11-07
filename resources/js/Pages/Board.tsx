@@ -119,6 +119,15 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
           from: source.index,
           to: destination.index
         });
+        // persist the order on the server
+        axios.post(`/kalooki/${gameId}/reorder-hand`, {
+          from: source.index,
+          to: destination.index
+        }).then(({ data }) => {
+          console.log(data);
+          playerHandHandler.setState(data.hand);
+          setPlayerActions(data.availableActions);
+        });
       }
     }
     if (destination.droppableId === "discardPile") {

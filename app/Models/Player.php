@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerEndsTurnNotification;
 use App\Events\PlayerLayDownCards;
+use App\Events\PlayerReorderHand;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
 use App\Events\PlayerTurnNotification;
@@ -50,6 +51,10 @@ class Player {
 
   public function discardFromHand(Card $card): void {
     event(new PlayerDiscardCardFromHand($this->id, $card->id));
+  }
+
+  public function reorderHand($from, $to): void {
+    event(new PlayerReorderHand($this->id, $from, $to));
   }
 
   public function layDownCards(): void {
