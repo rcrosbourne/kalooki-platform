@@ -8,10 +8,11 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class PlayerTurnNotification
+class PlayerTurnNotification implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -20,7 +21,7 @@ class PlayerTurnNotification
      *
      * @return void
      */
-    public function __construct(public string $playerId){}
+    public function __construct(public string $playerId, public string $gameId){}
 
     /**
      * Get the channels the event should broadcast on.
@@ -29,6 +30,6 @@ class PlayerTurnNotification
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('channel-name');
+        return new PrivateChannel("game.{$this->gameId}.{$this->playerId}");
     }
 }

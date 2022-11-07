@@ -5,6 +5,7 @@ use App\Events\GameStarted;
 use App\Events\PlayerJoined;
 use App\Facades\GameCache;
 use App\Http\Controllers\CreateGameController;
+use App\Http\Controllers\GamePlayController;
 use App\Http\Controllers\JoinGameController;
 use App\Http\Controllers\StartGameController;
 use App\Http\Controllers\WaitingRoomController;
@@ -47,26 +48,93 @@ Route::get('/kalooki/join/{code}', JoinGameController::class)->name('kalooki.joi
 
 Route::post('/kalooki/{game}/start', StartGameController::class)->middleware(['auth', 'verified'])->name('game.start');
 
-Route::get('/kalooki/{game}/play', function (Game $game) {
+Route::get('/kalooki/{game}/play', GamePlayController::class)->middleware(['auth', 'verified'])->name('game.play');
+Route::get('/kalooki/{game}/available-moves', function (Game $game) {
+  // load game from cache
   $gameState = GameCache::getGameState(auth()->user()->id);
-  $kalooki = $gameState['game'];
-  // turn is random at start of game
-  $players = $kalooki->players;
-  $opponent = $players[array_search(auth()->user()->name, array_column($players, 'name')) === 0 ? 1 : 0]->name;
-  $stock  = $kalooki->stock;
-  $discard = $kalooki->discard;
+  /** @var Player $player */
+  $player = $gameState['player'];
+  // validate that it's your turn
+  if ($player->isTurn) {
+    // return available actions
+    return response()->json($player->availableActions());
+  }
+  return response()->json([]);
+})->middleware(["auth", "verified"])->name('game.available-moves');
+Route::post('/kalooki/{game}/request-card-from-stock-pile', function (Game $game) {
+  // load game from cache
+  $gameState = GameCache::getGameState(auth()->user()->id);
+  /** @var Player $player */
+  $player = $gameState['player'];
+  // validate that it's your turn
+  if ($player->isTurn) {
+    // request card from stock pile
+    $player->drawFromStockPile();
+    // reload game state
+    $gameState = GameCache::getGameState(auth()->user()->id);
+    /** @var Player $player */
+    $player = $gameState['player'];
+    // return available actions
+    return response()->json([
+      'availableActions' => $player->availableActions(),
+      'hand'             => $player->hand->cards,
+      'stock'            => $gameState['game']->stock,
+    ]);
+  }
+  return response()->json([]);
+})->middleware(["auth", "verified"])->name('game.request-card-from-stock-pile');
 
-  return Inertia::render('Board', [
-    'gameId'   => $game->id,
-    'player'   => $gameState['player'],
-    'hand'     => $gameState['player']->hand->cards,
-    'opponent' => $opponent,
-    'turn'   => $gameState['player']->isTurn ? 'Yours' : $opponent . '\'s',
-    'isTurn' => $gameState['player']->isTurn,
-    'stock' => $stock,
-    'discard' => $discard,
-    // turn is random at the start of the game
-  ]);
-})->middleware(['auth', 'verified'])->name('game.play');
+Route::post('/kalooki/{game}/discard-card-from-hand', function (Game $game) {
+  // load game from cache
+  // Card
+  $discardCardId = request()->input('card');
+  $gameState = GameCache::getGameState(auth()->user()->id);
+  /** @var Player $player */
+  $player = $gameState['player'];
+  // validate that it's your turn
+  if ($player->isTurn) {
+    //discard card from hand
+    $cardToBeDiscarded = collect($player->hand->cards)->firstWhere('id', $discardCardId);
+    $player->discardFromHand($cardToBeDiscarded);
+    // reload game state
+    $gameState = GameCache::getGameState(auth()->user()->id);
+    /** @var Player $player */
+    $player = $gameState['player'];
+    // return available actions
+    return response()->json([
+      'availableActions' => $player->availableActions(),
+      'hand'             => $player->hand->cards,
+      'discard'          => $gameState['game']->discard,
+    ]);
+  }
+  return response()->json([]);
+})->middleware(["auth", "verified"])->name('game.discard-card-from-hand');
 
+Route::post('/kalooki/{game}/end-turn', function (Game $game) {
+  $gameState = GameCache::getGameState(auth()->user()->id);
+  /** @var Player $player */
+  $player = $gameState['player'];
+  // validate that it's your turn
+  if ($player->isTurn) {
+    //discard card from hand
+    $player->endTurn();
+    // reload game state
+    $gameState = GameCache::getGameState(auth()->user()->id);
+    /** @var Kalooki $game */
+    $game = $gameState['game'];
+    /** @var Player $player */
+    $player = $gameState['player'];
+    $turn = array_values(array_filter($game->players, function ($player) {
+      return $player->isTurn;
+    }))[0]->name;
+    // return available actions
+    return response()->json([
+      'availableActions' => $player->availableActions(),
+      'isTurn'           => $player->isTurn,
+      'hand'             => $player->hand->cards,
+      'turn'        => "{$turn}'s",
+    ]);
+  }
+  return response()->json([]);
+})->middleware(["auth", "verified"])->name('game.end-turn');
 require __DIR__ . '/auth.php';

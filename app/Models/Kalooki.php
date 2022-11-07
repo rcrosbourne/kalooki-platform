@@ -12,6 +12,7 @@ use App\Events\PlayerRequestsCardFromStockPile;
 use App\Events\PlayerTurnNotification;
 use App\Exceptions\IllegalActionException;
 use App\Facades\GameCache;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class Kalooki {
@@ -181,10 +182,12 @@ class Kalooki {
     $player->availableActions = [];
     $player->actionsTaken = [];
     $player->isTurn = FALSE;
+    GameCache::cacheGame($game);
     // If the player has not won advance to the next player.
     if($player->isWinner === TRUE) {
       $game->winner = $player;
       // send a game over event.
+      GameCache::cacheGame($game);
       broadcast(new GameOver($player->name));
     }
     else {
@@ -192,7 +195,6 @@ class Kalooki {
       $nextPlayer = $this->getNextPlayer($player, $game);
       $this->setTurn($nextPlayer->id);
     }
-    GameCache::cacheGame($game);
   }
 
   public function setTurn(string $playerId): void {
@@ -208,8 +210,8 @@ class Kalooki {
     }
     // set player available actions, based on their hand.
     $player->availableActions = $this->getAvailableActions($player, $game);
-    event(new PlayerTurnNotification($player->id));
     GameCache::cacheGame($game);
+    broadcast(new PlayerTurnNotification($player->id, $game->id));
   }
 
   /**
@@ -231,7 +233,7 @@ class Kalooki {
       ->values()->toArray();
   }
 
-  private function getAvailableActions(Player $player, Kalooki $game): array {
+  public function getAvailableActions(Player $player, Kalooki $game): array {
     // if a player hand is empty they already won.
     if(empty($player->hand->cards)) {
       $player->isWinner = TRUE;
@@ -285,6 +287,16 @@ class Kalooki {
     }
     // return the next player.
     return $game->players[$playerIndex + 1];
+  }
+
+  public function setPlayerActions(): void {
+    $gameData = GameCache::getGameState(Auth::id());
+    /** @var \App\Models\Kalooki $game */
+    $game = $gameData['game'];
+    foreach ($game->players as $player) {
+      $player->availableActions = $this->getAvailableActions($player, $game);
+    }
+    GameCache::cacheGame($game);
   }
 
 }

@@ -34,11 +34,24 @@ class StartGameController extends Controller {
     ]);
     $kalooki->deal();
     $kalooki->started = TRUE;
+    // Set the players available actions
     $kalooki->players[rand(0, 1)]->isTurn = TRUE;
+    $this->setPlayerActions($kalooki);
     GameCache::cacheGame($kalooki);
     $game->save();
     broadcast(new GameStarted($game->id, $game->players[0]['id']));
     broadcast(new GameStarted($game->id, $game->players[1]['id']));
+  }
+
+  /**
+   * @param  \App\Models\Kalooki  $kalooki
+   *
+   * @return void
+   */
+  protected function setPlayerActions(Kalooki $kalooki): void {
+    foreach ($kalooki->players as $player) {
+      $player->availableActions = $player->isTurn ? $kalooki->getAvailableActions($player, $kalooki) : [];
+    }
   }
 
 }
