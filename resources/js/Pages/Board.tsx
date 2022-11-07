@@ -55,21 +55,7 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
       discardPileHandler.setState(e.boardState.discard);
       stockPileHandler.setState(e.boardState.stock);
     });
-    // window.Echo.private(gamePublicChannel).listen("MeldAdded", (e) => {
-    //     if (e.playerId === player.id) {
-    //         if (e.meld.length === 3) {
-    //             playerThreesHandler.add(e.meld);
-    //         } else {
-    //             playerFoursHandler.add(e.meld);
-    //         }
-    //     } else {
-    //         if (e.meld.length === 3) {
-    //             opponentThreesHandler.add(e.meld)
-    //         } else {
-    //             opponentFoursHandler.add(e.meld);
-    //         }
-    //     }
-    // });
+    
     return () => {
       window.Echo.leaveChannel(playerPrivateChannel);
       window.Echo.leaveChannel(gamePublicChannel);
@@ -90,9 +76,7 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
   const onDiscardPileClick = () => {
     if (myTurn && playerActions.includes("requestCardFromDiscardPile")) {
       // request card from stock pile
-      console.log("request card from discard pile");
       axios.post(`/kalooki/${gameId}/request-card-from-discard-pile`).then(({ data }) => {
-        console.log(data);
         playerHandHandler.setState(data.hand);
         discardPileHandler.setState(data.discard);
         setPlayerActions(data.availableActions);
