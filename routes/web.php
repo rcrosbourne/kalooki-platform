@@ -84,6 +84,29 @@ Route::post('/kalooki/{game}/request-card-from-stock-pile', function (Game $game
   return response()->json([]);
 })->middleware(["auth", "verified"])->name('game.request-card-from-stock-pile');
 
+Route::post('/kalooki/{game}/request-card-from-discard-pile', function (Game $game) {
+  // load game from cache
+  $gameState = GameCache::getGameState(auth()->user()->id);
+  /** @var Player $player */
+  $player = $gameState['player'];
+  // validate that it's your turn
+  if ($player->isTurn) {
+    // request card from stock pile
+    $player->drawFromDiscardPile();
+    // reload game state
+    $gameState = GameCache::getGameState(auth()->user()->id);
+    /** @var Player $player */
+    $player = $gameState['player'];
+    // return available actions
+    return response()->json([
+      'availableActions' => $player->availableActions(),
+      'hand'             => $player->hand->cards,
+      'discard'            => $gameState['game']->discard,
+    ]);
+  }
+  return response()->json([]);
+})->middleware(["auth", "verified"])->name('game.request-card-from-discard-pile');
+
 Route::post('/kalooki/{game}/discard-card-from-hand', function (Game $game) {
   // load game from cache
   // Card

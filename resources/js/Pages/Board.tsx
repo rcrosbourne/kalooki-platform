@@ -48,12 +48,12 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
   // set up listeners
   useEffect(() => {
     window.Echo.private(playerPrivateChannel).listen("PlayerTurnNotification", (e) => {
-      console.log("PlayerTurnNotification", e);
       setMyTurn(true);
       setWhoTurn("Yours");
     });
-    window.Echo.channel(gamePublicChannel).listen("TurnChanged", (e) => {
-      // setTurn(e.turn);
+    window.Echo.channel(gamePublicChannel).listen("BoardStateUpdated", (e) => {
+      discardPileHandler.setState(e.boardState.discard);
+      stockPileHandler.setState(e.boardState.stock);
     });
     // window.Echo.private(gamePublicChannel).listen("MeldAdded", (e) => {
     //     if (e.playerId === player.id) {
@@ -86,6 +86,21 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
       });
     }
   };
+
+  const onDiscardPileClick = () => {
+    if (myTurn && playerActions.includes("requestCardFromDiscardPile")) {
+      // request card from stock pile
+      console.log("request card from discard pile");
+      axios.post(`/kalooki/${gameId}/request-card-from-discard-pile`).then(({ data }) => {
+        console.log(data);
+        playerHandHandler.setState(data.hand);
+        discardPileHandler.setState(data.discard);
+        setPlayerActions(data.availableActions);
+      });
+    }
+  };
+
+
   const onTurnEnd = () => {
     if (myTurn && playerActions.includes("endTurn")) {
       axios.post(`/kalooki/${gameId}/end-turn`).then(({ data }) => {
@@ -94,7 +109,7 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
         setWhoTurn(data.turn);
       });
     }
-  }
+  };
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
     if (destination.droppableId === source.droppableId) {
@@ -116,7 +131,7 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
         setPlayerActions(data.availableActions);
       });
     }
-  }
+  };
 
   return (
     <>
@@ -155,7 +170,8 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="col-start-3 row-start-3 grid">
+                  className="col-start-3 row-start-3 grid"
+                  onClick={onDiscardPileClick}>
                   {discardPile
                     .map((card, index) => (
                       <div
@@ -187,7 +203,7 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
             />
           </div>
           <div className="mt-[30px]">
-            <ActionBar disableActions={!myTurn} availableActions={playerActions} onTurnEnd={onTurnEnd}/>
+            <ActionBar disableActions={!myTurn} availableActions={playerActions} onTurnEnd={onTurnEnd} />
             <Meld
               droppableId={"playerHand"}
               className="mt-5 flex items-center justify-center p-4"

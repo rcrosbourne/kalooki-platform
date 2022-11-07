@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PlayerActions;
+use App\Events\BoardStateUpdated;
 use App\Events\GameOver;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerEndsTurnNotification;
@@ -110,6 +111,8 @@ class Kalooki {
     $player->actionsTaken[] = PlayerActions::requestCardFromStockPile;
     $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
+    // broadcast bord update
+    broadcast(new BoardStateUpdated($game->id, ['stock' => $game->stock, 'discard' => $game->discard]));
   }
 
   /**
@@ -127,6 +130,8 @@ class Kalooki {
     $player->actionsTaken[] = PlayerActions::requestCardFromDiscardPile;
     $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
+    // broadcast bord update
+    broadcast(new BoardStateUpdated($game->id, ['stock' => $game->stock, 'discard' => $game->discard]));
   }
 
   /**
@@ -150,6 +155,8 @@ class Kalooki {
     $player->actionsTaken[] = PlayerActions::discardCardFromHand;
     $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
+    // broadcast bord update
+    broadcast(new BoardStateUpdated($game->id, ['stock' => $game->stock, 'discard' => $game->discard]));
   }
 
   /**
@@ -158,6 +165,7 @@ class Kalooki {
   public function playerLayDownCards(PlayerLayDownCards $event): void {
     $gameData = GameCache::getGameState($event->playerId);
     $game = $gameData['game'];
+    /** @var \App\Models\Player $player */
     $player = $gameData['player'];
     if(!in_array(PlayerActions::layDownCards, $player->availableActions)) {
       throw new IllegalActionException('Player cannot lay down cards.');
@@ -166,6 +174,12 @@ class Kalooki {
     $player->actionsTaken[] = PlayerActions::layDownCards;
     $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
+    // broadcast bord update
+    broadcast(new BoardStateUpdated($game->id, [
+      'stock' => $game->stock,
+      'discard' => $game->discard,
+      'threes' => $player->laidDownThrees,
+      'fours' => $player->laidDownFours]));
   }
 
   /**
