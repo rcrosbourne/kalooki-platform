@@ -5,9 +5,10 @@ interface Props {
   disableActions: boolean;
   availableActions: string[];
   onTurnEnd: () => void;
+  onLayDownCards: () => void;
 }
 
-export default function ActionBar({ disableActions = false, availableActions, onTurnEnd }: Props) {
+export default function ActionBar({ disableActions = false, availableActions, onTurnEnd, onLayDownCards }: Props) {
   const canDraw = !disableActions && (availableActions.includes("requestCardFromDiscardPile") || availableActions.includes("requestCardFromStockPile"));
   const canLayCards = !disableActions && (availableActions.includes("layDownCards"));
   const canDiscard = !disableActions && (availableActions.includes("discardCardFromHand"));
@@ -20,7 +21,7 @@ export default function ActionBar({ disableActions = false, availableActions, on
           <GameButton processing={!canDraw}>Draw</GameButton>
         </li>
         <li>
-          <GameButton processing={!canLayCards}>Lay Cards</GameButton>
+          <GameButton processing={!canLayCards} onClick={onLayDownCards}>Lay Cards</GameButton>
         </li>
         <li>
           <GameButton processing={!canDiscard}>Discard</GameButton>

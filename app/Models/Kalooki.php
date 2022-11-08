@@ -7,6 +7,7 @@ use App\Events\BoardStateUpdated;
 use App\Events\GameOver;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerEndsTurnNotification;
+use App\Events\PlayerLaidDownCards;
 use App\Events\PlayerLayDownCards;
 use App\Events\PlayerReorderHand;
 use App\Events\PlayerRequestsCardFromDiscardPile;
@@ -95,6 +96,7 @@ class Kalooki {
       = array_map(fn($cardString) => Card::fromString($cardString), $data['stock']
       ?? []);
     return new Kalooki(
+      id: $data['id'] ?? NULL,
       players: $data['players'] ?? [],
       started: $data['started'] ?? FALSE,
       deck: $deck,
@@ -185,9 +187,11 @@ class Kalooki {
     GameCache::cacheGame($game);
     // broadcast bord update
     broadcast(new BoardStateUpdated($game->id, [
+      'playerId' => $player->id,
       'stock' => $game->stock,
       'discard' => $game->discard,
-      'threes' => $player->laidDownThrees,
+      'topThrees' => $player->topThrees,
+      'bottomThrees' => $player->bottomThrees,
       'fours' => $player->laidDownFours]));
   }
 
@@ -248,12 +252,15 @@ class Kalooki {
     if (empty($contract)) {
       throw new IllegalActionException('No contract satisfied.');
     }
+    $player->topThrees = $contract['threes'][0];
+    $player->bottomThrees = $contract['threes'][1];
     $player->laidDownThrees = collect($contract['threes'])->flatten()->toArray();
     $player->laidDownFours = collect($contract['fours'])->flatten()->toArray();
     // remove laid down cards from hand
     $player->hand->cards = collect($player->hand->cards)
       ->filter(fn($card) => !in_array($card, $player->laidDownThrees) && !in_array($card, $player->laidDownFours))
       ->values()->toArray();
+//    broadcast(new PlayerLaidDownCards($this->id, $player->id, $player->topThrees, $player->bottomThrees, $player->laidDownFours));
   }
 
   public function getAvailableActions(Player $player, Kalooki $game): array {

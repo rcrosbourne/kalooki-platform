@@ -18,6 +18,8 @@ class Player {
   public function __construct(
     public string $name = "", public ?Hand $hand = NULL, public ?string $id = NULL,
     public array $laidDownThrees = [],
+    public array $topThrees = [],
+    public array $bottomThrees = [],
     public array $laidDownFours = [], public bool $isTurn = FALSE, public array $availableActions = [],
     public array $actionsTaken = [],
     public bool $isWinner = FALSE,
@@ -38,6 +40,7 @@ class Player {
     return new Player(
       name: $data['name'] ?? 'Player',
       hand: $hand,
+      id: $data['id'] ?? NULL,
     );
   }
 

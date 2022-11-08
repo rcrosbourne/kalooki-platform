@@ -54,8 +54,29 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
     window.Echo.channel(gamePublicChannel).listen("BoardStateUpdated", (e) => {
       discardPileHandler.setState(e.boardState.discard);
       stockPileHandler.setState(e.boardState.stock);
+      if(e.boardState.topThrees) {
+        if(e.boardState.playerId === player.id) {
+          playerTopThreesHandler.setState(e.boardState.topThrees);
+        } else {
+          opponentTopThreesHandler.setState(e.boardState.topThrees);
+        }
+      }
+      if(e.boardState.bottomThrees) {
+        if(e.boardState.playerId === player.id) {
+          playerBottomThreesHandler.setState(e.boardState.bottomThrees);
+        } else {
+          opponentBottomThreesHandler.setState(e.boardState.bottomThrees);
+        }
+      }
+      if(e.boardState.fours) {
+        if(e.boardState.playerId === player.id) {
+          playerFoursHandler.setState(e.boardState.fours);
+        } else {
+          opponentFoursHandler.setState(e.boardState.fours);
+        }
+      }
     });
-    
+
     return () => {
       window.Echo.leaveChannel(playerPrivateChannel);
       window.Echo.leaveChannel(gamePublicChannel);
@@ -94,6 +115,17 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
       });
     }
   };
+  const onLayDownCards = () => {
+    if (myTurn && playerActions.includes("layDownCards")) {
+      axios.post(`/kalooki/${gameId}/lay-cards`).then(({ data }) => {
+        playerHandHandler.setState(data.hand);
+        playerTopThreesHandler.setState(data.topThrees);
+        playerBottomThreesHandler.setState(data.bottomThrees);
+        playerFoursHandler.setState(data.fours);
+        setPlayerActions(data.availableActions);
+      });
+    }
+  }
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
     if (destination.droppableId === source.droppableId) {
@@ -196,7 +228,7 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
             />
           </div>
           <div className="mt-[30px]">
-            <ActionBar disableActions={!myTurn} availableActions={playerActions} onTurnEnd={onTurnEnd} />
+            <ActionBar disableActions={!myTurn} availableActions={playerActions} onTurnEnd={onTurnEnd} onLayDownCards={onLayDownCards} />
             <Meld
               droppableId={"playerHand"}
               className="mt-5 flex items-center justify-center p-4"

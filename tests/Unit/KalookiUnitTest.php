@@ -366,6 +366,7 @@ it('allows a player to lay down cards', function () {
  $game = Kalooki::fake([
       'players' => [
         Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
       ],
       'discard' => ['7♠', '7♥'],
       'stock' => [

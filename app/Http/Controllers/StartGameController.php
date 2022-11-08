@@ -26,14 +26,26 @@ class StartGameController extends Controller {
     abort_if($game->created_by !== auth()->user()->id, 403, 'You are not the creator of this game');
     $game->status = GameStatus::started;
     // set up Kalooki game
-    $kalooki = new Kalooki(
-      id: $game->id,
-      players: [
-      new Player(name: $game->players[0]['name'], id: $game->players[0]['id']),
-      new Player(name: $game->players[1]['name'], id: $game->players[1]['id']),
+//    $kalooki = new Kalooki(
+//      id: $game->id,
+//      players: [
+//      new Player(name: $game->players[0]['name'], id: $game->players[0]['id']),
+//      new Player(name: $game->players[1]['name'], id: $game->players[1]['id']),
+//    ]);
+//    $kalooki->deal();
+//    $kalooki->started = TRUE;
+    $kalooki = Kalooki::fake([
+      'id' => $game->id,
+      'players' => [
+        Player::fake(['id' => $game->players[0]['id'], 'hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+        Player::fake(['id' => $game->players[0]['id'], 'hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+      ],
+      'discard' => ['7♠', '7♥'],
+      'stock' => [
+        '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
+      ],
     ]);
-    $kalooki->deal();
-    $kalooki->started = TRUE;
     // Set the players available actions
     $kalooki->players[rand(0, 1)]->isTurn = TRUE;
     $this->setPlayerActions($kalooki);
