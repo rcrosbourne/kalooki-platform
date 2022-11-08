@@ -54,6 +54,7 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
     window.Echo.channel(gamePublicChannel).listen("BoardStateUpdated", (e) => {
       discardPileHandler.setState(e.boardState.discard);
       stockPileHandler.setState(e.boardState.stock);
+      console.log(e.boardState);
       if(e.boardState.topThrees) {
         if(e.boardState.playerId === player.id) {
           playerTopThreesHandler.setState(e.boardState.topThrees);
@@ -119,9 +120,6 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
     if (myTurn && playerActions.includes("layDownCards")) {
       axios.post(`/kalooki/${gameId}/lay-cards`).then(({ data }) => {
         playerHandHandler.setState(data.hand);
-        playerTopThreesHandler.setState(data.topThrees);
-        playerBottomThreesHandler.setState(data.bottomThrees);
-        playerFoursHandler.setState(data.fours);
         setPlayerActions(data.availableActions);
       });
     }
@@ -140,9 +138,8 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
           from: source.index,
           to: destination.index
         }).then(({ data }) => {
-          console.log(data);
           playerHandHandler.setState(data.hand);
-          setPlayerActions(data.availableActions);
+          // setPlayerActions(data.availableActions);
         });
       }
     }

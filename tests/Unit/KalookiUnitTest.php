@@ -365,10 +365,11 @@ it('adds card to the top of the discard pile and removes it when player draws fr
 it('allows a player to lay down cards', function () {
  $game = Kalooki::fake([
       'players' => [
-        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+        Player::fake(['hand' => ['A♣', '2♣', '3♣', '4♣', 'J♣', 'J♣', 'J♥', 'J♠', '7♦', '7♣', '7♦', 'Q♣']]),
+//        Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
         Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '4♣', '3♣', '4♣', '5♣', '8♣', '6♣']]),
       ],
-      'discard' => ['7♠', '7♥'],
+      'discard' => ['10♠', '10♥'],
       'stock' => [
         '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
         '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
@@ -378,6 +379,7 @@ it('allows a player to lay down cards', function () {
     $player1 = $game->players[0];
     $player1->drawFromStockPile();
     $player1->layDownCards();
+
     expect($player1->hand->cards)->toHaveCount(3)
       ->and($player1->laidDownThrees)->toHaveCount(6)
       ->and($player1->laidDownFours)->toHaveCount(4);

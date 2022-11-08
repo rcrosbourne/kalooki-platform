@@ -22,7 +22,7 @@ export default function Meld({ droppableId, cards, className}: Props) {
                     {...provided.droppableProps}
                     ref={provided.innerRef}
                     className={"flex " + getMeldSpacing() + className}>
-                    {cards.map((card, index) => (
+                    {cards && cards.length >= 0 && cards.map((card, index) => (
                         <div key={index} className="flex-1">
                             <Card {...card} index={index}/>
                         </div>
