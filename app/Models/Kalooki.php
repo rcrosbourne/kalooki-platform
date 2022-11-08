@@ -260,7 +260,6 @@ class Kalooki {
     $player->hand->cards = collect($player->hand->cards)
       ->filter(fn($card) => !in_array($card, $player->laidDownThrees) && !in_array($card, $player->laidDownFours))
       ->values()->toArray();
-//    broadcast(new PlayerLaidDownCards($this->id, $player->id, $player->topThrees, $player->bottomThrees, $player->laidDownFours));
   }
 
   public function getAvailableActions(Player $player, Kalooki $game): array {
