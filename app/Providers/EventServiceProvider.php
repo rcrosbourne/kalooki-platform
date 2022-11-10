@@ -8,6 +8,7 @@ use App\Events\PlayerLayDownCards;
 use App\Events\PlayerReorderHand;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
+use App\Events\PlayerTackOnCards;
 use App\Events\PlayerTurnNotification;
 use App\Models\Kalooki;
 use App\Models\Player;
@@ -45,6 +46,9 @@ class EventServiceProvider extends ServiceProvider {
       ],
       PlayerEndsTurnNotification::class         => [
         Kalooki::class . '@playerEndsTurn',
+      ],
+      PlayerTackOnCards::class         => [
+        Kalooki::class . '@playerTackOnCards',
       ],
       PlayerReorderHand::class         => [
         Kalooki::class . '@playerReorderHand',

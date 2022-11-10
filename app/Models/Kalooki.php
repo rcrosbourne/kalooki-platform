@@ -12,6 +12,7 @@ use App\Events\PlayerLayDownCards;
 use App\Events\PlayerReorderHand;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
+use App\Events\PlayerTackOnCards;
 use App\Events\PlayerTurnNotification;
 use App\Exceptions\IllegalActionException;
 use App\Facades\GameCache;
@@ -111,7 +112,7 @@ class Kalooki {
     $player = $gameData['player'];
     $card = array_pop($game->stock);
     $player->hand->cards[] = $card;
-    $player->actionsTaken[] = PlayerActions::requestCardFromStockPile;
+    $this->updatePlayerActionsTaken($player, PlayerActions::requestCardFromStockPile);
     $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
     // broadcast bord update
@@ -130,7 +131,7 @@ class Kalooki {
       throw new IllegalActionException('No card in discard pile.');
     }
     $player->hand->cards[] = $card;
-    $player->actionsTaken[] = PlayerActions::requestCardFromDiscardPile;
+    $this->updatePlayerActionsTaken($player, PlayerActions::requestCardFromDiscardPile);
     $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
     // broadcast bord update
@@ -155,7 +156,7 @@ class Kalooki {
       throw new IllegalActionException('Card not in players hand.');
     }
     $game->discard[] = $card;
-    $player->actionsTaken[] = PlayerActions::discardCardFromHand;
+    $this->updatePlayerActionsTaken($player, PlayerActions::discardCardFromHand);
     $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
     // broadcast bord update
@@ -182,7 +183,7 @@ class Kalooki {
       throw new IllegalActionException('Player cannot lay down cards.');
     }
     $this->layDownPlayersCards($player);
-    $player->actionsTaken[] = PlayerActions::layDownCards;
+    $this->updatePlayerActionsTaken($player, PlayerActions::layDownCards);
     $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
     // broadcast bord update
@@ -193,6 +194,44 @@ class Kalooki {
       'topThrees' => $player->topThrees,
       'bottomThrees' => $player->bottomThrees,
       'fours' => $player->laidDownFours]));
+  }
+
+  /**
+   * @throws \App\Exceptions\IllegalActionException
+   */
+  public function playerTackOnCards(PlayerTackOnCards $event): void {
+    $gameData = GameCache::getGameState($event->playerId);
+    $game = $gameData['game'];
+    /** @var \App\Models\Player $player */
+    $player = $gameData['player'];
+    if(!in_array(PlayerActions::tackOnCards, $player->availableActions)) {
+      throw new IllegalActionException('Player cannot tack on any cards.');
+    }
+    $this->tackOnPlayersCards($player);
+    $this->updatePlayerActionsTaken($player, PlayerActions::tackOnCards);
+    $player->availableActions = $this->getAvailableActions($player, $game);
+    GameCache::cacheGame($game);
+    // broadcast bord update
+    broadcast(new BoardStateUpdated($game->id, [
+      'playerId' => $player->id,
+      'stock' => $game->stock,
+      'discard' => $game->discard,
+      'topThrees' => $player->topThrees,
+      'bottomThrees' => $player->bottomThrees,
+      'fours' => $player->laidDownFours]));
+  }
+
+  private function tackOnPlayersCards(Player $player): void {
+    $tackOnCards = $player->canTackOnCards();
+    if(count($tackOnCards) === 0) {
+      return;
+    }
+    $player->hand->cards = $tackOnCards['hand'] ?? $player->hand->cards;
+    $player->topThrees = $tackOnCards['topThrees'] ?? $player->topThrees;
+    $player->bottomThrees = $tackOnCards['bottomThrees'] ?? $player->bottomThrees;
+    $player->laidDownFours = $tackOnCards['fours'] ?? $player->laidDownFours;
+    $player->laidDownThrees = collect([$player->topThrees, $player->bottomThrees])->flatten()->toArray();
+
   }
 
   /**
@@ -242,12 +281,12 @@ class Kalooki {
   }
 
   /**
-   * @param  mixed  $player
+   * @param  \App\Models\Player  $player
    *
-   * @return void
+   * @return \App\Models\Player
    * @throws \App\Exceptions\IllegalActionException
    */
-  protected function layDownPlayersCards(mixed $player): void {
+  protected function layDownPlayersCards(Player $player): Player {
     $contract = $player->contractSatisfied();
     if (empty($contract)) {
       throw new IllegalActionException('No contract satisfied.');
@@ -260,6 +299,7 @@ class Kalooki {
     $player->hand->cards = collect($player->hand->cards)
       ->filter(fn($card) => !in_array($card, $player->laidDownThrees) && !in_array($card, $player->laidDownFours))
       ->values()->toArray();
+    return $player;
   }
 
   public function getAvailableActions(Player $player, Kalooki $game): array {
@@ -289,6 +329,13 @@ class Kalooki {
       // If the contract is satisfied, the player can lay down the cards.
       if(!empty($player->contractSatisfied()) && !in_array(PlayerActions::layDownCards, $actionsAlreadyTaken)) {
         $actions[] = PlayerActions::layDownCards;
+      }
+      // If the player has already laid down cards,...
+      if(!empty($player->laidDownThrees) && !empty($player->laidDownFours) && !in_array(PlayerActions::tackOnCards, $actionsAlreadyTaken)) {
+      // and they have a card that can be tacked on.
+        if(!empty($player->canTackOnCards())) {
+          $actions[] = PlayerActions::tackOnCards;
+        }
       }
       // If the player has not discarded a card, and they have already requested a card
       // They can discard a card.
@@ -326,6 +373,15 @@ class Kalooki {
       $player->availableActions = $this->getAvailableActions($player, $game);
     }
     GameCache::cacheGame($game);
+  }
+
+  /**
+   * @param  \App\Models\Player  $player
+   *
+   * @return void
+   */
+  protected function updatePlayerActionsTaken(Player $player, PlayerActions $action): void {
+    $player->actionsTaken[] = $action;
   }
 
 }

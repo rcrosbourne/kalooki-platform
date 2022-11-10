@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\GameStatus;
 use App\Events\GameStarted;
 use App\Events\PlayerJoined;
 use App\Facades\GameCache;

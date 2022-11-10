@@ -3,12 +3,14 @@
 namespace App\Models;
 
 
+use App\Enums\Rank;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerEndsTurnNotification;
 use App\Events\PlayerLayDownCards;
 use App\Events\PlayerReorderHand;
 use App\Events\PlayerRequestsCardFromDiscardPile;
 use App\Events\PlayerRequestsCardFromStockPile;
+use App\Events\PlayerTackOnCards;
 use App\Events\PlayerTurnNotification;
 use Illuminate\Support\Str;
 
@@ -64,6 +66,10 @@ class Player {
     event(new PlayerLayDownCards($this->id));
   }
 
+  public function tackOnCards (): void {
+    event(new PlayerTackOnCards($this->id));
+  }
+
   public function endTurn(): void {
     event(new PlayerEndsTurnNotification($this->id));
   }
@@ -73,7 +79,7 @@ class Player {
   }
 
   public function onPlayerTurnNotification(PlayerTurnNotification $event): void {
-//    $this->isTurn = $event->playerId === $this->id;
+    //    $this->isTurn = $event->playerId === $this->id;
   }
 
   /**
@@ -133,6 +139,78 @@ class Player {
       //      return $solution;
     }
     return $solution;
+  }
+
+  public function canTackOnCards(): array {
+    //If no cards have been laid down return
+    if (empty($this->laidDownThrees) && empty($this->laidDownFours)) {
+      return [];
+    }
+    $initialSequence = $this->laidDownFours;
+    $initialHand = $this->hand->cards;
+    $currentCardIndex = 0;
+    while(TRUE) {
+      // if we have no cards left to tack on, we can stop.
+      if(empty($initialHand)) {
+        break;
+      }
+      // if we are already at the end of the sequence, we can stop.
+      if($currentCardIndex >= count($initialHand)) {
+        break;
+      }
+      // If we can add a card to the sequence, we do so.
+      if ($this->canTackOnToSequence($initialSequence, $initialHand[$currentCardIndex])) {
+        // If we can add a card to front of the sequence we do so.
+        unset($initialHand[$currentCardIndex]);
+        //reset the card index
+        $initialHand = array_values($initialHand);
+        $currentCardIndex = 0;
+      } else {
+        $currentCardIndex++;
+      }
+    }
+    $cards = [];
+
+    if(count(array_diff($initialSequence, $this->laidDownFours)) > 0) {
+     $cards['fours'] = $initialSequence;
+    }
+    // We should probably reassign the hand here.
+    /** @var Card $lastCardInTopThree */
+    $lastCardInTopThree = end($this->topThrees);
+    /** @var Card $lastCardInBottomThree */
+    $lastCardInBottomThree = end($this->bottomThrees);
+    $cardsForTopThree = array_values(array_filter($initialHand, fn(Card $card) => $card->rank->value() === $lastCardInTopThree->rank->value()));
+    $cardsForBottomThree = array_values(array_filter($initialHand, fn(Card $card) => $card->rank === $lastCardInBottomThree->rank));
+//    // return all the cards that can be tacked on
+    if(!empty($cardsForTopThree)) {
+      $cards['topThrees'] = array_merge($this->topThrees, $cardsForTopThree);
+    }
+    if(!empty($cardsForBottomThree)) {
+      $cards['bottomThrees'] = array_merge($this->bottomThrees, $cardsForBottomThree);
+    }
+    if(count(array_diff($this->hand->cards, $initialHand)) > 0) {
+      $cards['hand'] = $initialHand;
+    }
+    return $cards;
+  }
+  private function canTackOnToSequence(array &$sequence, Card $card): bool {
+    // if the last card in four is an ACE we can tack at the start of the sequence
+    $sequenceDirection = 1;
+    $lastCardInFour = end($sequence);
+    if (end($sequence)->rank === Rank::ace) {
+      $sequenceDirection = -1;
+      $lastCardInFour = reset($sequence);
+    }
+    //if the card can be added to the end of the sequence
+    // then we can tack on to the sequence
+    if($card->rank->value() === $lastCardInFour->rank->value() + $sequenceDirection && $card->suit === $lastCardInFour->suit) {
+      if($sequenceDirection == 1) {
+        $sequence[] = $card;
+      } else {
+        array_unshift($sequence, $card);
+      }
+    }
+    return $card->rank->value() === $lastCardInFour->rank->value() + $sequenceDirection && $card->suit === $lastCardInFour->suit;
   }
 
 }

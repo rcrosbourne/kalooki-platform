@@ -674,3 +674,98 @@ it('detects when a player has won', function () {
   $player1->endTurn();
   expect($player1->isWinner)->toBeTrue();
 });
+it('allows a player to tack on cards on the end of their own four after they lay out cards', function () {
+  $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', '8♣', '6♣']]),
+    ],
+    'discard' => ['7♠', '7♥', '7♣'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', '7♣','K♣'
+    ],
+  ]);
+  /** @var Player $player1 */
+  $player1 = $game->players[0];
+  $game->setTurn($player1->id);
+  $player1->drawFromStockPile();
+  $player1->layDownCards();
+  // discard K♣
+  $player1->discardFromHand($player1->hand->cards[1]);
+  $player1->endTurn();
+  // Draw 7♣ from stock
+  $player1->drawFromStockPile();
+  // Player laid down fours'3♣', '4♣', '5♣','6♣'
+  // Player currently has cards '8♣','7♣'
+  // His available actions should include canTackOnCards
+  expect($player1->availableActions())->toContain(\App\Enums\PlayerActions::tackOnCards);
+  // Player tacks on  '7♣' then '8♣'
+  $player1->tackOnCards();
+  expect($player1->hand->cards)->toHaveCount(0)->and($player1->laidDownFours)
+    ->toHaveCount(6)->and($player1->isWinner)->toBeTrue();
+});
+it('allows a player to tack on cards on beginning their own four if the four after they lay out cards', function () {
+ $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', 'J♣', 'Q♣', 'K♣', 'A♣', '9♣']]),
+    ],
+    'discard' => ['7♠', '7♥', '7♣'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', '7♣','10♣'
+    ],
+  ]);
+  /** @var Player $player1 */
+  $player1 = $game->players[0];
+  $game->setTurn($player1->id);
+  $player1->drawFromDiscardPile();
+  $player1->layDownCards();
+  // discard 7♣
+  $player1->discardFromHand($player1->hand->cards[1]);
+  $player1->endTurn();
+  // Draw 7♣ from stock
+  $player1->drawFromStockPile();
+  // Player laid down fours 'J♣', 'Q♣', 'K♣','A♣'
+  // Player currently has cards '9♣','10♣'
+  // Player can tack on 10♣ to the start of his fours
+  // His available actions should include canTackOnCards
+  expect($player1->availableActions())->toContain(\App\Enums\PlayerActions::tackOnCards);
+  // Player tacks on  '10♣' then '9♣'
+  $player1->tackOnCards();
+  expect($player1->hand->cards)->toHaveCount(0)->and($player1->laidDownFours)
+    ->toHaveCount(6)->and($player1->isWinner)->toBeTrue();
+});
+
+it('allows a player to tack on cards at the beginning or at the end of their own fours', function () {
+ $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', 'J♣', 'Q♣', 'K♣', '10♣', '7♣']]),
+    ],
+    'discard' => ['7♠', '7♥', '7♣'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'A♣', '9♣','8♣'
+    ],
+  ]);
+  /** @var Player $player1 */
+  $player1 = $game->players[0];
+  $game->setTurn($player1->id);
+  $player1->drawFromStockPile();
+  $player1->layDownCards();
+  // discard 7♣
+  $player1->discardFromHand($player1->hand->cards[0]);
+  $player1->endTurn();
+  // Draw 7♣ from stock
+  $player1->drawFromStockPile();
+  // Player laid down fours '10♣','J♣', 'Q♣', 'K♣',
+  // Player currently has cards '8♣',9♣'
+  // Player cannot tack on 9♣ to the start of his fours
+  // His available actions should not include canTackOnCards
+  expect($player1->availableActions())->not()->toContain(\App\Enums\PlayerActions::tackOnCards);
+  $player1->drawFromStockPile();
+  // Player currently has cards '8♣',9♣','A♣'
+  // Player tacks on  'A♣' then '9♣' then '8♣'
+  $player1->tackOnCards();
+  expect($player1->hand->cards)->toHaveCount(0)->and($player1->laidDownFours)
+    ->toHaveCount(7)->and($player1->isWinner)->toBeTrue();
+});
