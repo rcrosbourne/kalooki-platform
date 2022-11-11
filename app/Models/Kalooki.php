@@ -203,6 +203,8 @@ class Kalooki {
     $game = $gameData['game'];
     /** @var \App\Models\Player $player */
     $player = $gameData['player'];
+    /** @var \App\Models\Player $opponent */
+    $opponent = collect($this->getOpponents($player, $game))->first();
     if(!in_array(PlayerActions::tackOnCards, $player->availableActions)) {
       throw new IllegalActionException('Player cannot tack on any cards.');
     }
@@ -210,16 +212,27 @@ class Kalooki {
     $this->updatePlayerActionsTaken($player, PlayerActions::tackOnCards);
     $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
-    // broadcast bord update
-    broadcast(new BoardStateUpdated($game->id, [
-      'playerId' => $player->id,
+    $boardState = [
+     'playerId' => $player->id,
       'stock' => $game->stock,
       'discard' => $game->discard,
       'topThrees' => $player->topThrees,
       'bottomThrees' => $player->bottomThrees,
-      'fours' => $player->laidDownFours]));
+      'fours' => $player->laidDownFours,
+    ];
+    if($opponent) {
+      $boardState['opponentTopThrees'] = $opponent->topThrees;
+      $boardState['opponentBottomThrees'] = $opponent->bottomThrees;
+      $boardState['opponentFours'] = $opponent->laidDownFours;
+    }
+    // broadcast bord update
+    broadcast(new BoardStateUpdated($game->id, $boardState));
   }
-
+  private function getOpponents(Player $player, Kalooki $game): array {
+    return collect($game->players)->filter(function($p) use ($player) {
+      return $p->id !== $player->id;
+    })->values()->toArray();
+  }
   private function tackOnPlayersCards(Kalooki $game, Player $player): void {
     // set up the arrays
     $tackOnOwnCards = $player->canTackOnCards();
@@ -230,9 +243,8 @@ class Kalooki {
       $player->laidDownFours = $tackOnOwnCards['fours'] ?? $player->laidDownFours;
       $player->laidDownThrees = collect([$player->topThrees, $player->bottomThrees])->flatten()->toArray();
     }
-    $opponents = collect($game->players)
-          ->filter(fn($otherPlayer) => $otherPlayer->id !== $player->id &&
-            (!empty($otherPlayer->laidDownThrees) && !empty($otherPlayer->laidDownFours)))
+    $opponents = collect($this->getOpponents($player, $game))
+          ->filter(fn($otherPlayer) => !empty($otherPlayer->laidDownThrees) && !empty($otherPlayer->laidDownFours))
           ->values()->toArray();
     if(!empty($opponents)) {
       foreach($opponents as $opponent) {
@@ -251,7 +263,6 @@ class Kalooki {
         }
       }
     }
-
   }
 
   /**
