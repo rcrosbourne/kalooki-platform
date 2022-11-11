@@ -123,13 +123,38 @@ Route::post('/kalooki/{game}/lay-cards', function (Game $game) {
     return response()->json([
       'availableActions' => $player->availableActions(),
       'hand'             => $player->hand->cards,
-      'topThrees'           => $player->topThrees,
-      'bottomThrees'           => $player->bottomThrees,
+      'topThrees'        => $player->topThrees,
+      'bottomThrees'     => $player->bottomThrees,
       'fours'            => $player->laidDownFours,
     ]);
   }
   return response()->json([]);
 })->middleware(["auth", "verified"])->name('game.lay-down-cards');
+
+Route::post('/kalooki/{game}/tack-on-cards', function (Game $game) {
+  // load game from cache
+  $gameState = GameCache::getGameState(auth()->user()->id);
+  /** @var Player $player */
+  $player = $gameState['player'];
+  // validate that it's your turn
+  if ($player->isTurn) {
+    // Tack on cards
+    $player->tackOnCards();
+    // reload game state
+    $gameState = GameCache::getGameState(auth()->user()->id);
+    /** @var Player $player */
+    $player = $gameState['player'];
+    // return available actions
+    return response()->json([
+      'availableActions' => $player->availableActions(),
+      'hand'             => $player->hand->cards,
+      'topThrees'        => $player->topThrees,
+      'bottomThrees'     => $player->bottomThrees,
+      'fours'            => $player->laidDownFours,
+    ]);
+  }
+  return response()->json([]);
+})->middleware(["auth", "verified"])->name('game.tack-on-cards');
 
 Route::post('/kalooki/{game}/discard-card-from-hand', function (Game $game) {
   // load game from cache

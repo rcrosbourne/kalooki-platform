@@ -322,8 +322,8 @@ class Kalooki {
     if (empty($contract)) {
       throw new IllegalActionException('No contract satisfied.');
     }
-    $player->topThrees = $contract['threes'][0];
-    $player->bottomThrees = $contract['threes'][1];
+    $player->topThrees = array_values($contract['threes'][0]);
+    $player->bottomThrees = array_values($contract['threes'][1]);
     $player->laidDownThrees = collect($contract['threes'])->flatten()->toArray();
     $player->laidDownFours = collect($contract['fours'])->flatten()->toArray();
     // remove laid down cards from hand

@@ -17,19 +17,27 @@ interface Props {
   isTurn: boolean;
   stock: Card[];
   discard: Card[];
+  playerTopThrees: Card[];
+  playerBottomThrees: Card[];
+  playerFours: Card[];
+  opponentTopThrees: Card[];
+  opponentBottomThrees: Card[];
+  opponentFours: Card[];
 }
 
-export default function Board({ gameId, player, hand, opponent, turn, isTurn, stock, discard }: Props) {
+export default function Board({ gameId, player, hand, opponent, turn, isTurn, stock, discard,
+                                playerTopThrees:playerT3, playerBottomThrees:playerB3, playerFours:player4s, opponentTopThrees:opponentT3,
+                                opponentBottomThrees:opponentB3, opponentFours:opponent4s }: Props) {
   const [playerHand, playerHandHandler] = useListState(hand);
   const [playerActions, setPlayerActions] = useState([]);
   const [myTurn, setMyTurn] = useState(isTurn);
   const [whoTurn, setWhoTurn] = useState(turn);
-  const [playerTopThrees, playerTopThreesHandler] = useListState([]);
-  const [playerBottomThrees, playerBottomThreesHandler] = useListState([]);
-  const [playerFours, playerFoursHandler] = useListState([]);
-  const [opponentTopThrees, opponentTopThreesHandler] = useListState([]);
-  const [opponentBottomThrees, opponentBottomThreesHandler] = useListState([]);
-  const [opponentFours, opponentFoursHandler] = useListState([]);
+  const [playerTopThrees, playerTopThreesHandler] = useListState(playerT3);
+  const [playerBottomThrees, playerBottomThreesHandler] = useListState(playerB3);
+  const [playerFours, playerFoursHandler] = useListState(player4s);
+  const [opponentTopThrees, opponentTopThreesHandler] = useListState(opponentT3);
+  const [opponentBottomThrees, opponentBottomThreesHandler] = useListState(opponentB3);
+  const [opponentFours, opponentFoursHandler] = useListState(opponent4s);
   const [discardPile, discardPileHandler] = useListState(discard);
   // This will need to change for security reasons
   // The entire list cannot be on the client.
@@ -76,6 +84,15 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
           opponentFoursHandler.setState(e.boardState.fours);
         }
       }
+      if(e.boardState.opponentFours) {
+       opponentFoursHandler.setState(e.boardState.opponentFours);
+      }
+      if(e.boardState.opponentTopThrees) {
+       opponentTopThreesHandler.setState(e.boardState.opponentTopThrees);
+      }
+      if(e.boardState.opponentBottomThrees) {
+        opponentBottomThreesHandler.setState(e.boardState.opponentBottomThrees);
+      }
     });
 
     return () => {
@@ -119,6 +136,14 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
   const onLayDownCards = () => {
     if (myTurn && playerActions.includes("layDownCards")) {
       axios.post(`/kalooki/${gameId}/lay-cards`).then(({ data }) => {
+        playerHandHandler.setState(data.hand);
+        setPlayerActions(data.availableActions);
+      });
+    }
+  }
+  const onTackOnCards = () => {
+    if (myTurn && playerActions.includes("tackOnCards")) {
+      axios.post(`/kalooki/${gameId}/tack-on-cards`).then(({ data }) => {
         playerHandHandler.setState(data.hand);
         setPlayerActions(data.availableActions);
       });
@@ -225,7 +250,10 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
             />
           </div>
           <div className="mt-[30px]">
-            <ActionBar disableActions={!myTurn} availableActions={playerActions} onTurnEnd={onTurnEnd} onLayDownCards={onLayDownCards} />
+            <ActionBar disableActions={!myTurn} availableActions={playerActions}
+                       onTurnEnd={onTurnEnd}
+                       onLayDownCards={onLayDownCards}
+                       onTackOnCards={onTackOnCards}/>
             <Meld
               droppableId={"playerHand"}
               className="mt-5 flex items-center justify-center p-4"
