@@ -7,7 +7,6 @@ use App\Events\BoardStateUpdated;
 use App\Events\GameOver;
 use App\Events\PlayerDiscardCardFromHand;
 use App\Events\PlayerEndsTurnNotification;
-use App\Events\PlayerLaidDownCards;
 use App\Events\PlayerLayDownCards;
 use App\Events\PlayerReorderHand;
 use App\Events\PlayerRequestsCardFromDiscardPile;

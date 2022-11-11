@@ -184,9 +184,13 @@ class Player {
 //    // return all the cards that can be tacked on
     if(!empty($cardsForTopThree)) {
       $cards['topThrees'] = array_merge($this->topThrees, $cardsForTopThree);
+      // remove card from initialHand
+      $initialHand = array_values(array_diff($initialHand, $cardsForTopThree));
     }
     if(!empty($cardsForBottomThree)) {
       $cards['bottomThrees'] = array_merge($this->bottomThrees, $cardsForBottomThree);
+      // remove card from initialHand
+      $initialHand = array_values(array_diff($initialHand, $cardsForBottomThree));
     }
     if(count(array_diff($this->hand->cards, $initialHand)) > 0) {
       $cards['hand'] = $initialHand;

@@ -769,3 +769,37 @@ it('allows a player to tack on cards at the beginning or at the end of their own
   expect($player1->hand->cards)->toHaveCount(0)->and($player1->laidDownFours)
     ->toHaveCount(7)->and($player1->isWinner)->toBeTrue();
 });
+
+it('allows a player to tack on cards on their top and/or bottom threes', function () {
+ $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['A♠', 'A♥', 'A♦', '2♠', '2♥', '2♦', 'J♣', 'Q♣', 'K♣', '10♣', '7♣']]),
+    ],
+    'discard' => ['7♠', '7♥', '7♣'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'A♣', '2♣','A♦'
+    ],
+  ]);
+  /** @var Player $player1 */
+  $player1 = $game->players[0];
+  $game->setTurn($player1->id);
+  $player1->drawFromDiscardPile(); // Draw 7♣ from discard
+  $player1->layDownCards();
+  // discard 7♣
+  $player1->discardFromHand($player1->hand->cards[0]);
+  $player1->endTurn();
+  // Draw 7♣ from stock
+  $player1->drawFromStockPile();
+  // Player laid down fours '10♣','J♣', 'Q♣', 'K♣',
+  // Player currently has bottom threes 'A♠', 'A♥', 'A♦'
+  // Player currently has top threes '2♠', '2♥', '2♦'
+  // Player currently has cards '7♣','A♣'
+  // His available actions should include canTackOnCards
+  expect($player1->availableActions())->toContain(\App\Enums\PlayerActions::tackOnCards);
+  // Player tacks on  'A♣' then discards '7♣'
+  $player1->tackOnCards();
+  $player1->discardFromHand($player1->hand->cards[0]);
+  expect($player1->hand->cards)->toHaveCount(0)->and($player1->laidDownFours)
+    ->toHaveCount(4)->and($player1->laidDownThrees)->toHaveCount(7)->and($player1->bottomThrees)->toHaveCount(4);
+});
