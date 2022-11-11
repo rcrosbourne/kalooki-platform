@@ -285,7 +285,7 @@ class Kalooki {
       $game->winner = $player;
       // send a game over event.
       GameCache::cacheGame($game);
-      broadcast(new GameOver($player->name));
+      broadcast(new GameOver($game->id, $player->name));
     }
     else {
       // Notify the next player that it is their turn.

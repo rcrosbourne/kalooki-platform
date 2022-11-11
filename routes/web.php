@@ -217,6 +217,16 @@ Route::post('/kalooki/{game}/end-turn', function (Game $game) {
     $game = $gameState['game'];
     /** @var Player $player */
     $player = $gameState['player'];
+    if($player->isWinner) {
+      return response()->json([
+        'availableActions' => $player->availableActions(),
+        'hand'             => $player->hand->cards,
+        'topThrees'        => $player->topThrees,
+        'bottomThrees'     => $player->bottomThrees,
+        'fours'            => $player->laidDownFours,
+        'winner'           => $player->name,
+      ]);
+    }
     $turn = array_values(
               array_filter($game->players, function ($player) {
                 return $player->isTurn;

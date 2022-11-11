@@ -7,6 +7,8 @@ import GameStats from "@/Components/GameStats";
 import Meld from "@/Components/Meld";
 import ActionBar from "@/Components/ActionBar";
 import axios from "axios";
+import {showNotification} from '@mantine/notifications';
+import {IconX} from "@tabler/icons";
 
 interface Props {
   gameId: string;
@@ -58,6 +60,16 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
     window.Echo.private(playerPrivateChannel).listen("PlayerTurnNotification", (e) => {
       setMyTurn(true);
       setWhoTurn("Yours");
+    });
+    window.Echo.channel(gamePublicChannel).listen("GameOver", (e) => {
+      console.log(e.winner);
+      // set up notification
+      showNotification({
+                    title: 'Winner',
+                    message: e.winner + ' has won the game',
+                    autoClose: 3000,
+                    icon: <IconX />,
+                })
     });
     window.Echo.channel(gamePublicChannel).listen("BoardStateUpdated", (e) => {
       discardPileHandler.setState(e.boardState.discard);

@@ -41,8 +41,8 @@ class StartGameController extends Controller {
     $kalooki = Kalooki::fake([
       'id' => $game->id,
     'players' => [
-      Player::fake(['id' => $game->players[0]['id'], 'hand' => ['K♠', 'K♥', 'K♦', '3♠', '3♥', '3♦', '10♣', 'J♣', 'Q♣', 'K♣', '6♣']]),
-      Player::fake(['id' => $game->players[1]['id'], 'hand' => ['Q♠', 'Q♥', 'Q♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', 'A♣', '6♣']]),
+      Player::fake(['id' => $game->players[0]['id'], 'name' => "Player 1",'hand' => ['K♠', 'K♥', 'K♦', '3♠', '3♥', '3♦', '10♣', 'J♣', 'Q♣', 'K♣', '6♣']]),
+      Player::fake(['id' => $game->players[1]['id'], 'name' => "Player 2", 'hand' => ['Q♠', 'Q♥', 'Q♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', 'A♣', '6♣']]),
     ],
     'discard' => ['7♠', '7♥', '7♣'],
     'stock' => [
