@@ -38,29 +38,29 @@ class StartGameController extends Controller {
 //        '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', 'K♣'
 //      ],
 //    ]);
-    $kalooki = Kalooki::fake([
-      'id' => $game->id,
-    'players' => [
-      Player::fake(['id' => $game->players[0]['id'], 'name' => "Player 1",'hand' => ['K♠', 'K♥', 'K♦', '3♠', '3♥', '3♦', '10♣', 'J♣', 'Q♣', 'K♣', '6♣']]),
-      Player::fake(['id' => $game->players[1]['id'], 'name' => "Player 2", 'hand' => ['Q♠', 'Q♥', 'Q♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', 'A♣', '6♣']]),
-    ],
-    'discard' => ['7♠', '7♥', '7♣'],
-    'stock' => [
-      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
-      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', '7♣','3♣'
-    ],
-  ]);
-//    $kalooki = new Kalooki(
-//      id: $game->id,
-//      players: [
-//      new Player(name: $game->players[0]['name'], id: $game->players[0]['id']),
-//      new Player(name: $game->players[1]['name'], id: $game->players[1]['id']),
-//    ]);
-//    $kalooki->deal();
+//    $kalooki = Kalooki::fake([
+//      'id' => $game->id,
+//    'players' => [
+//      Player::fake(['id' => $game->players[0]['id'], 'name' => "Player 1",'hand' => ['K♠', 'K♥', 'K♦', '3♠', '3♥', '3♦', '10♣', 'J♣', 'Q♣', 'K♣', '6♣']]),
+//      Player::fake(['id' => $game->players[1]['id'], 'name' => "Player 2", 'hand' => ['Q♠', 'Q♥', 'Q♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', 'A♣', '6♣']]),
+//    ],
+//    'discard' => ['7♠', '7♥', '7♣'],
+//    'stock' => [
+//      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+//      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', '7♣','3♣'
+//    ],
+//  ]);
+    $kalooki = new Kalooki(
+      id: $game->id,
+      players: [
+      new Player(name: $game->players[0]['name'], id: $game->players[0]['id']),
+      new Player(name: $game->players[1]['name'], id: $game->players[1]['id']),
+    ]);
+    $kalooki->deal();
     $kalooki->started = TRUE;
     // Set the players available actions
-//    $kalooki->players[rand(0, 1)]->isTurn = TRUE;
-    $kalooki->players[0]->isTurn = TRUE;
+    $kalooki->players[rand(0, 1)]->isTurn = TRUE;
+//    $kalooki->players[0]->isTurn = TRUE;
     $this->setPlayerActions($kalooki);
     GameCache::cacheGame($kalooki);
     $game->save();
