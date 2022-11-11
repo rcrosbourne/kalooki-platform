@@ -837,3 +837,47 @@ it('allows a player to tack on cards on their top threes', function () {
   expect($player1->hand->cards)->toHaveCount(0)->and($player1->laidDownFours)
     ->toHaveCount(4)->and($player1->laidDownThrees)->toHaveCount(7)->and($player1->topThrees)->toHaveCount(4);
 });
+
+it('allows a player to tack on cards on the end of their opponents four after they lay out cards', function () {
+  $game = Kalooki::fake([
+    'players' => [
+      Player::fake(['hand' => ['K♠', 'K♥', 'K♦', '2♠', '2♥', '2♦', '10♣', 'J♣', 'Q♣', 'K♣', '6♣']]),
+      Player::fake(['hand' => ['Q♠', 'Q♥', 'Q♦', '2♠', '2♥', '2♦', '3♣', '4♣', '5♣', 'A♣', '6♣']]),
+    ],
+    'discard' => ['7♠', '7♥', '7♣'],
+    'stock' => [
+      '7♥', '7♦', '7♣', '8♠', '8♥', '8♦', '8♣', '9♠', '9♥', '9♦', '9♣', '10♠', '10♥',
+      '10♦', '10♣', 'J♠', 'J♥', 'J♦', 'J♣', 'Q♠', 'Q♥', 'Q♦', 'Q♣', 'K♠', 'K♥', 'K♦', '7♣','9♣'
+    ],
+  ]);
+  /** @var Player $player1 */
+  $player1 = $game->players[0];
+  $player2 = $game->players[1];
+  $game->setTurn($player1->id);
+  $player1->drawFromDiscardPile(); // Draw 7♣ from discard
+  $player1->layDownCards();
+  // discard 6♣
+  $player1->discardFromHand($player1->hand->cards[0]);
+  $player1->endTurn();
+  // Draw 7♣ from stock
+  $player2->drawFromStockPile();
+  $player2->layDownCards();
+  /** Current Game State */
+  // Player1  laid down fours'10♣', 'J♣', 'Q♣','K♣'
+  // Player1  laid top threes '2♠', '2♥', '2♦'
+  // Player1  laid bottom threes 'K♠', 'K♥', 'K♦',
+  // Player1 currently has cards '7♣'
+
+  // Player2  laid down fours '3♣', '4♣', '5♣','6♣'
+  // Player2  laid top threes '2♠', '2♥', '2♦'
+  // Player2  laid bottom threes 'Q♠', 'Q♥', 'Q♦',
+  // Player2 currently has cards 'A♣', '9♣'
+  // His available actions should include canTackOnCards
+
+  expect($player2->availableActions())->toContain(\App\Enums\PlayerActions::tackOnCards);
+  // Player2 can tack on Player1 sequence 'A♣' then '9♣'
+  $player2->tackOnCards();
+
+  expect($player2->hand->cards)->toHaveCount(0)->and($player1->laidDownFours)
+    ->toHaveCount(6)->and($player2->isWinner)->toBeTrue();
+});

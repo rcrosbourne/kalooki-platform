@@ -206,7 +206,7 @@ class Kalooki {
     if(!in_array(PlayerActions::tackOnCards, $player->availableActions)) {
       throw new IllegalActionException('Player cannot tack on any cards.');
     }
-    $this->tackOnPlayersCards($player);
+    $this->tackOnPlayersCards($game, $player);
     $this->updatePlayerActionsTaken($player, PlayerActions::tackOnCards);
     $player->availableActions = $this->getAvailableActions($player, $game);
     GameCache::cacheGame($game);
@@ -220,16 +220,37 @@ class Kalooki {
       'fours' => $player->laidDownFours]));
   }
 
-  private function tackOnPlayersCards(Player $player): void {
-    $tackOnCards = $player->canTackOnCards();
-    if(count($tackOnCards) === 0) {
-      return;
+  private function tackOnPlayersCards(Kalooki $game, Player $player): void {
+    // set up the arrays
+    $tackOnOwnCards = $player->canTackOnCards();
+    if(count($tackOnOwnCards) > 0) {
+      $player->hand->cards = $tackOnOwnCards['hand'] ?? $player->hand->cards;
+      $player->topThrees = $tackOnOwnCards['topThrees'] ?? $player->topThrees;
+      $player->bottomThrees = $tackOnOwnCards['bottomThrees'] ?? $player->bottomThrees;
+      $player->laidDownFours = $tackOnOwnCards['fours'] ?? $player->laidDownFours;
+      $player->laidDownThrees = collect([$player->topThrees, $player->bottomThrees])->flatten()->toArray();
     }
-    $player->hand->cards = $tackOnCards['hand'] ?? $player->hand->cards;
-    $player->topThrees = $tackOnCards['topThrees'] ?? $player->topThrees;
-    $player->bottomThrees = $tackOnCards['bottomThrees'] ?? $player->bottomThrees;
-    $player->laidDownFours = $tackOnCards['fours'] ?? $player->laidDownFours;
-    $player->laidDownThrees = collect([$player->topThrees, $player->bottomThrees])->flatten()->toArray();
+    $opponents = collect($game->players)
+          ->filter(fn($otherPlayer) => $otherPlayer->id !== $player->id &&
+            (!empty($otherPlayer->laidDownThrees) && !empty($otherPlayer->laidDownFours)))
+          ->values()->toArray();
+    if(!empty($opponents)) {
+      foreach($opponents as $opponent) {
+        $layout = [
+          'topThrees' => $opponent->topThrees,
+          'bottomThrees' => $opponent->bottomThrees,
+          'fours' => $opponent->laidDownFours,
+        ];
+        $tackOnOpponentsCards = $player->canTackOnCards($layout);
+        if(count($tackOnOpponentsCards) > 0) {
+          $player->hand->cards = $tackOnOpponentsCards['hand'] ?? $player->hand->cards;
+          $opponent->topThrees = $tackOnOpponentsCards['topThrees'] ?? $opponent->topThrees;
+          $opponent->bottomThrees = $tackOnOpponentsCards['bottomThrees'] ?? $opponent->bottomThrees;
+          $opponent->laidDownFours = $tackOnOpponentsCards['fours'] ?? $opponent->laidDownFours;
+          $opponent->laidDownThrees = collect([$opponent->topThrees, $opponent->bottomThrees])->flatten()->toArray();
+        }
+      }
+    }
 
   }
 
@@ -332,7 +353,27 @@ class Kalooki {
       // If the player has already laid down cards,...
       if(!empty($player->laidDownThrees) && !empty($player->laidDownFours) && !in_array(PlayerActions::tackOnCards, $actionsAlreadyTaken)) {
       // and they have a card that can be tacked on.
-        if(!empty($player->canTackOnCards())) {
+        $playerLayout = [
+          'topThrees' => $player->topThrees,
+          'bottomThrees' => $player->bottomThrees,
+          'fours' => $player->laidDownFours];
+        // TODO: when we start having more than 1 player this will need to be changed
+        $otherPlayersWithLaidOutCards = collect($game->players)
+          ->filter(fn($otherPlayer) => $otherPlayer->id !== $player->id &&
+            (!empty($otherPlayer->laidDownThrees) && !empty($otherPlayer->laidDownFours)))
+          ->values()->toArray();
+          // Check if the player has a card that can be tacked on.
+        if(!empty($otherPlayersWithLaidOutCards)) {
+          $otherPlayerLayout = [
+            'topThrees'    => $otherPlayersWithLaidOutCards[0]->topThrees,
+            'bottomThrees' => $otherPlayersWithLaidOutCards[0]->bottomThrees,
+            'fours'        => $otherPlayersWithLaidOutCards[0]->laidDownFours
+          ];
+          if(!empty($player->canTackOnCards($otherPlayerLayout))) {
+            $actions[] = PlayerActions::tackOnCards;
+          }
+        }
+        if(!empty($player->canTackOnCards($playerLayout))) {
           $actions[] = PlayerActions::tackOnCards;
         }
       }

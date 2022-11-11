@@ -141,12 +141,18 @@ class Player {
     return $solution;
   }
 
-  public function canTackOnCards(): array {
+  public function canTackOnCards(array $layout = []): array {
     //If no cards have been laid down return
-    if (empty($this->laidDownThrees) && empty($this->laidDownFours)) {
+    if ($this->noCardsLaidOut()) {
       return [];
     }
-    $initialSequence = $this->laidDownFours;
+    if(empty($layout)) {
+      $layout =[
+        'topThrees' => $this->topThrees,
+        'bottomThrees' => $this->bottomThrees,
+        'fours' => $this->laidDownFours];
+    }
+    $initialSequence = $layout['fours'];//$this->laidDownFours;
     $initialHand = $this->hand->cards;
     $currentCardIndex = 0;
     while(TRUE) {
@@ -171,24 +177,24 @@ class Player {
     }
     $cards = [];
 
-    if(count(array_diff($initialSequence, $this->laidDownFours)) > 0) {
+    if(count(array_diff($initialSequence, $layout['fours'])) > 0) {
      $cards['fours'] = $initialSequence;
     }
     // We should probably reassign the hand here.
     /** @var Card $lastCardInTopThree */
-    $lastCardInTopThree = end($this->topThrees);
+    $lastCardInTopThree = end($layout['topThrees']);//end($this->topThrees);
     /** @var Card $lastCardInBottomThree */
-    $lastCardInBottomThree = end($this->bottomThrees);
+    $lastCardInBottomThree = end($layout['bottomThrees']);//end($this->bottomThrees);
     $cardsForTopThree = array_values(array_filter($initialHand, fn(Card $card) => $card->rank->value() === $lastCardInTopThree->rank->value()));
     $cardsForBottomThree = array_values(array_filter($initialHand, fn(Card $card) => $card->rank === $lastCardInBottomThree->rank));
 //    // return all the cards that can be tacked on
     if(!empty($cardsForTopThree)) {
-      $cards['topThrees'] = array_merge($this->topThrees, $cardsForTopThree);
+      $cards['topThrees'] = array_merge($layout['topThrees'], $cardsForTopThree); //array_merge($this->topThrees, $cardsForTopThree);
       // remove card from initialHand
       $initialHand = array_values(array_diff($initialHand, $cardsForTopThree));
     }
     if(!empty($cardsForBottomThree)) {
-      $cards['bottomThrees'] = array_merge($this->bottomThrees, $cardsForBottomThree);
+      $cards['bottomThrees'] = array_merge($layout['bottomThrees'], $cardsForBottomThree);//array_merge($this->bottomThrees, $cardsForBottomThree);
       // remove card from initialHand
       $initialHand = array_values(array_diff($initialHand, $cardsForBottomThree));
     }
@@ -215,6 +221,13 @@ class Player {
       }
     }
     return $card->rank->value() === $lastCardInFour->rank->value() + $sequenceDirection && $card->suit === $lastCardInFour->suit;
+  }
+
+  /**
+   * @return bool
+   */
+  protected function noCardsLaidOut(): bool {
+    return empty($this->laidDownThrees) && empty($this->laidDownFours);
   }
 
 }
