@@ -8,6 +8,8 @@ import Meld from "@/Components/Meld";
 import ActionBar from "@/Components/ActionBar";
 import axios from "axios";
 import {showNotification} from '@mantine/notifications';
+import { useViewportSize } from '@mantine/hooks';
+import Confetti from 'react-confetti'
 import {IconX} from "@tabler/icons";
 
 interface Props {
@@ -41,6 +43,8 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
   const [opponentBottomThrees, opponentBottomThreesHandler] = useListState(opponentB3);
   const [opponentFours, opponentFoursHandler] = useListState(opponent4s);
   const [discardPile, discardPileHandler] = useListState(discard);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const { width, height } = useViewportSize();
   // This will need to change for security reasons
   // The entire list cannot be on the client.
   const [stockPile, stockPileHandler] = useListState(stock);
@@ -62,14 +66,15 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
       setWhoTurn("Yours");
     });
     window.Echo.channel(gamePublicChannel).listen("GameOver", (e) => {
-      console.log(e.winner);
+
       // set up notification
       showNotification({
                     title: 'Winner',
                     message: e.winner + ' has won the game',
                     autoClose: 3000,
                     icon: <IconX />,
-                })
+                });
+      setShowConfetti(true);
     });
     window.Echo.channel(gamePublicChannel).listen("BoardStateUpdated", (e) => {
       discardPileHandler.setState(e.boardState.discard);
@@ -210,6 +215,7 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
       <Head title="Board" />
       <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-dark-blue px-4 pt-5 dark:bg-dark-blue sm:items-center sm:pt-0">
         <GameStats opponent={opponent} turn={whoTurn} />
+        {showConfetti && <Confetti width={width} height={height} />}
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="mt-8 grid max-h-[433px] w-full flex-1 grid-cols-4 gap-2 rounded-xl border border-light-brown bg-light-blue p-4">
             <Meld

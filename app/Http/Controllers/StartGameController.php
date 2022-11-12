@@ -59,7 +59,7 @@ class StartGameController extends Controller {
     ]);
     $kalooki->deal();
     $kalooki->started = TRUE;
-    // Set the players available actions
+//     Set the players available actions
     $kalooki->players[rand(0, 1)]->isTurn = TRUE;
 //    $kalooki->players[0]->isTurn = TRUE;
     $this->setPlayerActions($kalooki);
