@@ -17,6 +17,7 @@ class StartGameController extends Controller {
    * @param  \App\Models\Game          $game
    *
    * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
+   * @throws \Exception
    */
   public function __invoke(Request $request, Game $game) {
 

@@ -97,13 +97,26 @@ export default function Board({ gameId, player, hand, opponent, turn, isTurn, st
         }
       }
       if(e.boardState.opponentFours) {
-       opponentFoursHandler.setState(e.boardState.opponentFours);
+        if(e.boardState.playerId === player.id) {
+          opponentFoursHandler.setState(e.boardState.opponentFours);
+        } else {
+          playerFoursHandler.setState(e.boardState.opponentFours);
+        }
       }
       if(e.boardState.opponentTopThrees) {
-       opponentTopThreesHandler.setState(e.boardState.opponentTopThrees);
+        if(e.boardState.playerId === player.id) {
+          opponentTopThreesHandler.setState(e.boardState.opponentTopThrees);
+        } else {
+          playerTopThreesHandler.setState(e.boardState.opponentTopThrees);
+        }
       }
       if(e.boardState.opponentBottomThrees) {
-        opponentBottomThreesHandler.setState(e.boardState.opponentBottomThrees);
+        if(e.boardState.playerId === player.id) {
+          opponentBottomThreesHandler.setState(e.boardState.opponentBottomThrees);
+        }
+        else {
+          playerBottomThreesHandler.setState(e.boardState.opponentBottomThrees);
+        }
       }
     });
 
